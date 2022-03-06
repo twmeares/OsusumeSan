@@ -9,6 +9,7 @@ import com.mariten.kanatools.KanaConverter;
 public class OsusumeSanToken {
     Token token;
     String reading;
+    private static String REGEX_KANJI = ".*[\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff].*";
 
     OsusumeSanToken(Token token){
         this.token = token;
@@ -20,7 +21,8 @@ public class OsusumeSanToken {
     }
 
     public Boolean getIsKanjiWord() {
-        return !isKatakana(token.getBaseForm()) && !isHiragana(token.getBaseForm());
+        return token.getBaseForm().matches(REGEX_KANJI);
+        //return !isKatakana(token.getBaseForm()) && !isHiragana(token.getBaseForm());
     }
 
     public String getReading(){
@@ -30,6 +32,8 @@ public class OsusumeSanToken {
     public String getDictForm() {
         return token.getBaseForm();
     }
+
+    public int getPosition() { return token.getPosition(); }
 
     public Boolean getIsFuriganaEnabled(){
         //TODO for now just return true. Eventually consult knowledge model.

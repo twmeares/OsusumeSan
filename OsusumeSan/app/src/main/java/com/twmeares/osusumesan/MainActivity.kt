@@ -10,6 +10,8 @@ import android.widget.TextView
 import com.twmeares.osusumesan.models.OsusumeSanTokenizer
 import com.twmeares.osusumesan.ui.RubySpan
 import com.twmeares.osusumesan.utils.DataBaseHelper
+import com.twmeares.osusumesan.utils.SysDictHelper
+import com.worksap.nlp.sudachi.Tokenizer
 import java.lang.Integer.min
 
 class MainActivity : AppCompatActivity() {
@@ -21,18 +23,28 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //init
-        initMainTextView()
-        tokenizer = OsusumeSanTokenizer()
-        dbHelper = DataBaseHelper(this)
-        dbHelper.createDataBase()
-        dbHelper.openDataBase()
-
-
+        //test strings for now
         //var text = "頑張り屋"
         //var text = "大人買い" //doesn't work properly due to being tokenized as two words instead of one
         var text = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
         //var text = "食べてる"
+
+        //init
+        initMainTextView()
+
+        dbHelper = DataBaseHelper(this)
+        dbHelper.createDataBase()
+        dbHelper.openDataBase()
+        var sysDictHelper = SysDictHelper(this)
+        sysDictHelper.createDataBase()
+        var dict = sysDictHelper.dictionary
+        val useSudachi = false
+        if (useSudachi){
+            tokenizer = OsusumeSanTokenizer(dict)
+        } else {
+            tokenizer = OsusumeSanTokenizer()
+        }
+
         displayText(text)
     }
 
@@ -55,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         var tokens = tokenizer.Tokenize(text)
 
         tokens.forEachIndexed { tokenIdx, token ->
-            val all = token.token.allFeatures
+            //val all = token.token.allFeatures
             val reading = token.reading
             val dictForm = token.dictForm
             val basePosition = token.position
@@ -115,6 +127,6 @@ class MainActivity : AppCompatActivity() {
 //        ssb.setSpan(RubySpan("や", true), 3, 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         mainTextView.text = ssb
-        mainTextView.setMovementMethod(LinkMovementMethod.getInstance());
+        mainTextView.setMovementMethod(LinkMovementMethod.getInstance())
     }
 }

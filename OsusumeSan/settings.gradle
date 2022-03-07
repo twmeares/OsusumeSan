@@ -1,9 +1,21 @@
+def githubProperties = new Properties()
+file("github.properties").withInputStream {githubProperties.load(it)}
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
         jcenter() // Warning: this repository is going to shut down soon
+
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/WorksApplications/Sudachi")
+            //url = uri("https://maven.pkg.github.com/enefce/AndroidLibraryForGitHubPackagesDemo")
+            credentials {
+                username = githubProperties.getProperty('gpr.user')
+                password = githubProperties.getProperty('gpr.key')
+            }
+        }
     }
 }
 rootProject.name = "OsusumeSan"

@@ -47,4 +47,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     api 'com.atilika.kuromoji:kuromoji-ipadic:0.9.0'
     api 'com.mariten:kanatools:1.3.0'
+    api 'com.worksap.nlp:sudachi:0.6.0-SNAPSHOT'
 }

@@ -1,13 +1,18 @@
 package com.twmeares.osusumesan
 
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.TextPaint
 import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import com.twmeares.osusumesan.models.OsusumeSanTokenizer
+import com.twmeares.osusumesan.services.DictionaryLookupService
 import com.twmeares.osusumesan.ui.RubySpan
 import com.twmeares.osusumesan.utils.DataBaseHelper
 import com.twmeares.osusumesan.utils.SysDictHelper
@@ -18,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tokenizer: OsusumeSanTokenizer
     private lateinit var mainTextView: TextView
     private lateinit var dbHelper: DataBaseHelper
+    private lateinit var dictService: DictionaryLookupService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +37,7 @@ class MainActivity : AppCompatActivity() {
 
         //init
         initMainTextView()
-
+        dictService = DictionaryLookupService(this)
         dbHelper = DataBaseHelper(this)
         dbHelper.createDataBase()
         dbHelper.openDataBase()
@@ -72,6 +78,8 @@ class MainActivity : AppCompatActivity() {
             val dictForm = token.dictForm
             val basePosition = token.position
             val totalLength = min(dictForm.length, reading.length)
+            var start = basePosition
+            var end = basePosition + totalLength
             if (dictForm.length != reading.length){
                 //TODO delete this just wanting to see how often this is the case
                 val diff = dictForm.length - reading.length
@@ -104,29 +112,45 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                             val ruby = splitItem[1]
-                            val start = basePosition + rubyIdx
-                            val end = basePosition + rubyIdxEnd
+                            start = basePosition + rubyIdx
+                            end = basePosition + rubyIdxEnd
                             ssb.setSpan(RubySpan(ruby, true), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                         }
                     }
                 } else {
                     //failed to find the word in jmDict.db, possible bad tokenization of compound word.
-                    var start = basePosition
-                    var end = basePosition + totalLength
                     ssb.setSpan(RubySpan(reading, true), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
 
             }
+
+            if (token.isKanjiWord || token.isKanaWord) {
+                // TODO there is some kind of issue where clicking the word on the left edge of a row
+                // activates the clickable region on the right side word on the previous row
+                ssb.setSpan(GenClickableSpan(dictForm), basePosition, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
         }
 
 
-        //when both the clickableSpan and rubySpan are on the same index the color change from the clickable span doesn't happen.
-        //ssb.setSpan(GenClickableSpan("頑張り屋"), 0, 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-//        ssb.setSpan(RubySpan("がん", true), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-//        ssb.setSpan(RubySpan("ば", true), 1, 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-//        ssb.setSpan(RubySpan("や", true), 3, 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-
         mainTextView.text = ssb
         mainTextView.setMovementMethod(LinkMovementMethod.getInstance())
+    }
+
+    fun GenClickableSpan(text: String): ClickableSpan {
+        val clickableSpan: ClickableSpan = object : ClickableSpan() {
+            override fun onClick(textView: View) {
+                //TODO should I use a snackbar?
+                //Snackbar.make(textView, text, Snackbar.LENGTH_LONG)
+                //    .setAction("Action", null).show()
+                dictService.Search(text)
+            }
+
+            override fun updateDrawState(ds: TextPaint) {
+                super.updateDrawState(ds)
+                ds.isUnderlineText = false
+                ds.color = Color.BLACK
+            }
+        }
+        return clickableSpan
     }
 }

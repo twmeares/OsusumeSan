@@ -38,6 +38,14 @@ public class OsusumeSanToken {
         //return !isKatakana(token.getBaseForm()) && !isHiragana(token.getBaseForm());
     }
 
+    public Boolean getIsKanaWord() {
+        if (useSudachi) {
+            return isKatakana(morph.dictionaryForm()) || isHiragana(morph.dictionaryForm());
+        } else {
+            return isKatakana(token.getBaseForm()) || isHiragana(token.getBaseForm());
+        }
+    }
+
     public String getReading(){
         return reading;
     }

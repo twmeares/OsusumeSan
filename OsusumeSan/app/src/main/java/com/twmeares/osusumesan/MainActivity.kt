@@ -17,10 +17,8 @@ import com.twmeares.osusumesan.services.iDictionaryLookupService
 import com.twmeares.osusumesan.ui.RubySpan
 import com.twmeares.osusumesan.utils.DataBaseHelper
 import com.twmeares.osusumesan.utils.SysDictHelper
-import com.worksap.nlp.sudachi.Tokenizer
-import org.json.JSONArray
+import org.json.JSONObject
 import java.lang.Integer.min
-import java.lang.reflect.Method
 
 class MainActivity : AppCompatActivity() {
     private lateinit var tokenizer: OsusumeSanTokenizer
@@ -163,7 +161,16 @@ class MainActivity : AppCompatActivity() {
         return clickableSpan
     }
 
-    fun DisplayDictResult(jsonArray: JSONArray) {
-        Toast.makeText(this, jsonArray.getString(0), Toast.LENGTH_LONG).show();
+    fun DisplayDictResult(dictResult: JSONObject) {
+        var dictInfo = ""
+        if (dictResult.getBoolean("matchFound")){
+            val dictForm = dictResult.getJSONArray("japanese").getJSONObject(0).getString("word")
+            val senses = dictResult.getJSONArray("senses")
+            dictInfo += dictForm + " " + senses.toString()
+        } else {
+            dictInfo += "No exact match found for " + dictResult.getString("searchQuery")
+        }
+        Toast.makeText(this, dictInfo, Toast.LENGTH_LONG).show();
+
     }
 }

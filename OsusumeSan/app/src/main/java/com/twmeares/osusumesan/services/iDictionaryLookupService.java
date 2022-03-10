@@ -1,12 +1,12 @@
 package com.twmeares.osusumesan.services;
 
-import org.json.JSONArray;
+import org.json.JSONObject;
 
 public interface iDictionaryLookupService {
 
-    public JSONArray Search(String word, Callback callback);
+    public void Search(String word, Callback callback);
 
     public interface Callback {
-        void DisplayDictResult(JSONArray result);
+        void DisplayDictResult(JSONObject result);
     }
 }

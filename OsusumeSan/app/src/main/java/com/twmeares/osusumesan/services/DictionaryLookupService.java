@@ -25,7 +25,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
     }
 
     @Override
-    public JSONArray Search(String word, Callback callback) {
+    public void Search(String word, Callback callback) {
         queue.cancelAll(this);
 
 
@@ -33,7 +33,6 @@ public class DictionaryLookupService implements iDictionaryLookupService{
         searchrequest.setTag(this);
 
         queue.add(searchrequest);
-        return null;
     }
 
     private StringRequest BuildSearchStringRequest(String word, Callback callback) {
@@ -46,8 +45,22 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                     public void onResponse(String response) {
                         try {
                             JSONArray result = new JSONObject(response).getJSONArray("data");
-                            //TODO properly parse the json result for display
-                            callback.DisplayDictResult(result);
+                            Boolean matchFound = false;
+                            for (int i = 0 ; i < result.length(); i++) {
+                                JSONObject entry = result.getJSONObject(i);
+                                if (word.equals(entry.getString("slug"))){
+                                    matchFound = true;
+                                    entry.put("matchFound", true);
+                                    callback.DisplayDictResult(entry);
+                                }
+                            }
+                            if (matchFound == false){
+                                //TODO log no match found
+                                JSONObject mismatchedResult = new JSONObject();
+                                mismatchedResult.put("matchFound", false);
+                                mismatchedResult.put("searchQuery", url.substring(URL_PREFIX.length()));
+                                mismatchedResult.put("result", result);
+                            }
                         } catch (JSONException e) {
                             Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
                             //TODO add logging

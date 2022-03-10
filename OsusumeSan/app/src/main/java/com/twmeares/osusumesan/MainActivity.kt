@@ -13,17 +13,22 @@ import android.widget.TextView
 import android.widget.Toast
 import com.twmeares.osusumesan.models.OsusumeSanTokenizer
 import com.twmeares.osusumesan.services.DictionaryLookupService
+import com.twmeares.osusumesan.services.iDictionaryLookupService
 import com.twmeares.osusumesan.ui.RubySpan
 import com.twmeares.osusumesan.utils.DataBaseHelper
 import com.twmeares.osusumesan.utils.SysDictHelper
 import com.worksap.nlp.sudachi.Tokenizer
+import org.json.JSONArray
 import java.lang.Integer.min
+import java.lang.reflect.Method
 
 class MainActivity : AppCompatActivity() {
     private lateinit var tokenizer: OsusumeSanTokenizer
     private lateinit var mainTextView: TextView
     private lateinit var dbHelper: DataBaseHelper
     private lateinit var dictService: DictionaryLookupService
+    private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
+    //private lateinit var displayDictCallback: iDictionaryLookupService.Callback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +43,8 @@ class MainActivity : AppCompatActivity() {
         //init
         initMainTextView()
         dictService = DictionaryLookupService(this)
+
+        //displayDictCallback = ::DisplayDictResult
         dbHelper = DataBaseHelper(this)
         dbHelper.createDataBase()
         dbHelper.openDataBase()
@@ -142,7 +149,9 @@ class MainActivity : AppCompatActivity() {
                 //TODO should I use a snackbar?
                 //Snackbar.make(textView, text, Snackbar.LENGTH_LONG)
                 //    .setAction("Action", null).show()
-                dictService.Search(text)
+                //dictService.Search(text, (::DisplayDictInfo as Method))
+
+                dictService.Search(text, displayDictCallback)
             }
 
             override fun updateDrawState(ds: TextPaint) {
@@ -152,5 +161,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return clickableSpan
+    }
+
+    fun DisplayDictResult(jsonArray: JSONArray) {
+        Toast.makeText(this, jsonArray.getString(0), Toast.LENGTH_LONG).show();
     }
 }

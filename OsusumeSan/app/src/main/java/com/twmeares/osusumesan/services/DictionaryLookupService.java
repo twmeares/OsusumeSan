@@ -25,17 +25,18 @@ public class DictionaryLookupService implements iDictionaryLookupService{
     }
 
     @Override
-    public JSONArray Search(String word) {
+    public JSONArray Search(String word, Callback callback) {
         queue.cancelAll(this);
 
-        StringRequest searchrequest = BuildSearchStringRequest(word);
+
+        StringRequest searchrequest = BuildSearchStringRequest(word, callback);
         searchrequest.setTag(this);
 
         queue.add(searchrequest);
         return null;
     }
 
-    private StringRequest BuildSearchStringRequest(String word) {
+    private StringRequest BuildSearchStringRequest(String word, Callback callback) {
         //Code modified based on https://wtmimura.com/post/calling-api-on-android-studio/
         String url = URL_PREFIX + word;
 
@@ -46,7 +47,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                         try {
                             JSONArray result = new JSONObject(response).getJSONArray("data");
                             //TODO properly parse the json result for display
-                            Toast.makeText(context, result.getString(0), Toast.LENGTH_LONG).show();
+                            callback.DisplayDictResult(result);
                         } catch (JSONException e) {
                             Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
                             //TODO add logging
@@ -62,4 +63,6 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                     }
                 });
     }
+
+
 }

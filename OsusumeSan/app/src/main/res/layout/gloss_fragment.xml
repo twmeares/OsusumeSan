@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/dimen_16">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/glossTitle"
+        android:layout_width="@dimen/wrap_constraints"
+        android:layout_height="wrap_content"
+        android:text="@string/gloss_title"
+        android:textSize="@dimen/font_size_24"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/glossDetails"
+        android:layout_width="@dimen/wrap_constraints"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dimen_12"
+        android:text="@string/gloss_details"
+        android:textSize="@dimen/font_size_16"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/glossTitle" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnPositive"
+        android:layout_width="@dimen/dimen_100"
+        android:layout_height="@dimen/dimen_48"
+        android:layout_marginTop="@dimen/dimen_16"
+        android:text="OK"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/glossDetails" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnNegative"
+        android:layout_width="@dimen/dimen_100"
+        android:layout_height="@dimen/dimen_48"
+        android:layout_marginTop="@dimen/dimen_16"
+        android:text="Cancel"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnPositive"
+        app:layout_constraintTop_toBottomOf="@+id/glossDetails" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

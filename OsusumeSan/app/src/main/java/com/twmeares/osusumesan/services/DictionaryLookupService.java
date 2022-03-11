@@ -60,6 +60,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                 mismatchedResult.put("matchFound", false);
                                 mismatchedResult.put("searchQuery", url.substring(URL_PREFIX.length()));
                                 mismatchedResult.put("result", result);
+                                callback.DisplayDictResult(mismatchedResult);
                             }
                         } catch (JSONException e) {
                             Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();

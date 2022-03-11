@@ -17,6 +17,7 @@ import com.twmeares.osusumesan.services.iDictionaryLookupService
 import com.twmeares.osusumesan.ui.RubySpan
 import com.twmeares.osusumesan.utils.DataBaseHelper
 import com.twmeares.osusumesan.utils.SysDictHelper
+import com.twmeares.osusumesan.viewmodels.GlossDialog
 import org.json.JSONObject
 import java.lang.Integer.min
 
@@ -132,7 +133,7 @@ class MainActivity : AppCompatActivity() {
             if (token.isKanjiWord || token.isKanaWord) {
                 // TODO there is some kind of issue where clicking the word on the left edge of a row
                 // activates the clickable region on the right side word on the previous row
-                ssb.setSpan(GenClickableSpan(dictForm), basePosition, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                ssb.setSpan(GenClickableSpan(dictForm), basePosition, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
 
@@ -162,15 +163,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun DisplayDictResult(dictResult: JSONObject) {
-        var dictInfo = ""
+
         if (dictResult.getBoolean("matchFound")){
             val dictForm = dictResult.getJSONArray("japanese").getJSONObject(0).getString("word")
-            val senses = dictResult.getJSONArray("senses")
-            dictInfo += dictForm + " " + senses.toString()
+            val senses = dictResult.getJSONArray("senses").toString()
+            //dictInfo += dictForm + " " + senses.toString()
+            GlossDialog.newInstance(dictForm, senses).show(supportFragmentManager, GlossDialog.TAG)
         } else {
-            dictInfo += "No exact match found for " + dictResult.getString("searchQuery")
+            val msg = "No exact match found for " + dictResult.getString("searchQuery")
+            GlossDialog.newInstance("Not Found", msg).show(supportFragmentManager, GlossDialog.TAG)
         }
-        Toast.makeText(this, dictInfo, Toast.LENGTH_LONG).show();
-
     }
 }

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">OsusumeSan</string>
+    <string name="gloss_title">Title</string>
+    <string name="gloss_details">Details</string>
 </resources>

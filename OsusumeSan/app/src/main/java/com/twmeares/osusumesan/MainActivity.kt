@@ -8,9 +8,11 @@ import android.text.Spanned
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import com.twmeares.osusumesan.models.DictionaryResult
 import com.twmeares.osusumesan.models.OsusumeSanTokenizer
 import com.twmeares.osusumesan.services.DictionaryLookupService
 import com.twmeares.osusumesan.services.iDictionaryLookupService
@@ -27,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dbHelper: DataBaseHelper
     private lateinit var dictService: DictionaryLookupService
     private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
+    private val TAG: String = "MainActivity"
     //private lateinit var displayDictCallback: iDictionaryLookupService.Callback
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,22 +77,18 @@ class MainActivity : AppCompatActivity() {
 
     fun displayText(text: String){
         val ssb = SpannableStringBuilder(text)
-
-        //tokenize text
         var tokens = tokenizer.Tokenize(text)
 
         tokens.forEachIndexed { tokenIdx, token ->
-            //val all = token.token.allFeatures
             val reading = token.reading
             val dictForm = token.dictForm
             val basePosition = token.position
             val totalLength = min(dictForm.length, reading.length)
             var start = basePosition
             var end = basePosition + totalLength
-            if (dictForm.length != reading.length){
-                //TODO delete this just wanting to see how often this is the case
-                val diff = dictForm.length - reading.length
-            }
+            val underline = false
+
+            // Add furigana to the tokens that contain kanji.
             if (token.isKanjiWord && token.isFuriganaEnabled && reading != null && dictForm != null){
                 val furiHelper = dbHelper.getFuriganaFromDB(dictForm, reading)
                 if (furiHelper != null) {
@@ -108,26 +107,26 @@ class MainActivity : AppCompatActivity() {
                                     // furigana that doesn't evenly split on the kanji word e.g.
                                     // 大人 is 0-1:おとな
                                     // grab the last digit as the rubyIdxEnd
-                                    //TODO add logging
                                     rubyIdx = rubyIdxStr.first().digitToInt()
                                     rubyIdxEnd = rubyIdxStr.last().digitToInt() + 1
                                 } else {
-                                    //TODO add logging
+                                    Log.d(TAG, dictForm + " not found in JMDictFurigana.")
                                     rubyIdx = furiIdx
                                     rubyIdxEnd = rubyIdx + 1
                                 }
                             }
+                            // normal case when the furi position info was found in furiHelper.
                             val ruby = splitItem[1]
                             start = basePosition + rubyIdx
                             end = basePosition + rubyIdxEnd
-                            ssb.setSpan(RubySpan(ruby, true), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                            ssb.setSpan(RubySpan(ruby, underline), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                         }
                     }
                 } else {
-                    //failed to find the word in jmDict.db, possible bad tokenization of compound word.
-                    ssb.setSpan(RubySpan(reading, true), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    // failed to find the word in jmDict.db, possible bad tokenization of compound word.
+                    Log.d(TAG, dictForm + " not found in JMDictFurigana.")
+                    ssb.setSpan(RubySpan(reading, underline), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
-
             }
 
             if (token.isKanjiWord || token.isKanaWord) {
@@ -137,7 +136,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
         mainTextView.text = ssb
         mainTextView.setMovementMethod(LinkMovementMethod.getInstance())
     }
@@ -145,11 +143,6 @@ class MainActivity : AppCompatActivity() {
     fun GenClickableSpan(text: String): ClickableSpan {
         val clickableSpan: ClickableSpan = object : ClickableSpan() {
             override fun onClick(textView: View) {
-                //TODO should I use a snackbar?
-                //Snackbar.make(textView, text, Snackbar.LENGTH_LONG)
-                //    .setAction("Action", null).show()
-                //dictService.Search(text, (::DisplayDictInfo as Method))
-
                 dictService.Search(text, displayDictCallback)
             }
 
@@ -157,21 +150,14 @@ class MainActivity : AppCompatActivity() {
                 super.updateDrawState(ds)
                 ds.isUnderlineText = false
                 ds.color = Color.BLACK
+                ds.bgColor = Color.TRANSPARENT
             }
         }
         return clickableSpan
     }
 
-    fun DisplayDictResult(dictResult: JSONObject) {
-
-        if (dictResult.getBoolean("matchFound")){
-            val dictForm = dictResult.getJSONArray("japanese").getJSONObject(0).getString("word")
-            val senses = dictResult.getJSONArray("senses").toString()
-            //dictInfo += dictForm + " " + senses.toString()
-            GlossDialog.newInstance(dictForm, senses).show(supportFragmentManager, GlossDialog.TAG)
-        } else {
-            val msg = "No exact match found for " + dictResult.getString("searchQuery")
-            GlossDialog.newInstance("Not Found", msg).show(supportFragmentManager, GlossDialog.TAG)
-        }
+    // Display the dictionary info in a gloss dialog
+    fun DisplayDictResult(dictResult: DictionaryResult) {
+        GlossDialog.newInstance(dictResult).show(supportFragmentManager, GlossDialog.TAG)
     }
 }

@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.worksap.nlp.sudachi.Config;
 import com.worksap.nlp.sudachi.Dictionary;
@@ -19,16 +20,11 @@ import com.worksap.nlp.sudachi.Settings;
 public class SysDictHelper {
         // Data Base Name.
         private static final String FILE_NAME = "system_small.dic";
-        //static final String COMMON_SETTINGS = "{\"systemDict\":\"system.dic\",\"oovProviderPlugin\":[{\"class\":\"com.worksap.nlp.sudachi.SimpleOovProviderPlugin\",\"oovPOS\":[\"名詞\",\"普通名詞\",\"一般\",\"*\",\"*\",\"*\"],\"leftId\":8,\"rightId\":8,\"cost\":6000}],\"userDict\":[";
         private static final String SETTINGS = "{\"systemDict\":\"" + FILE_NAME + "\"}";
+    private static final String TAG = "SysDictHelper";
         //The Android's default system path of your application database.
         private static String FILE_PATH;
-        // Data Base Version.
-        private static final int DATABASE_VERSION = 1;
-        // Table Names of Data Base.
-        static final String TABLE_Name = "tableName";
-
-        public Context context;
+        private Context context;
 
 
         /**
@@ -42,7 +38,6 @@ public class SysDictHelper {
          */
         public SysDictHelper(Context context) {
             this.context = context;
-            //DB_PATH = context.getDatabasePath(DATABASE_NAME).getAbsolutePath();
             FILE_PATH = context.getFileStreamPath(FILE_NAME).getAbsolutePath().replace(FILE_NAME, "");
         }
 
@@ -98,14 +93,13 @@ public class SysDictHelper {
 
         public Dictionary getDictionary(){
             try{
-                //Config config = Config.fromSettings(Settings.parseSettings(FILE_PATH, SETTINGS));
                 Config config = Config.fromClasspath();
                 Path path = Paths.get(FILE_PATH + FILE_NAME);
                 config.systemDictionary(path);
                 Dictionary dict = new DictionaryFactory().create(config);
-                //Dictionary dict = new DictionaryFactory().create(FILE_PATH, SETTINGS);
                 return dict;
             } catch (IOException ex){
+                Log.e(TAG, "error while getting Sudachi Dictionary. " + ex.getMessage());
                 return null;
             }
         }

@@ -1,6 +1,7 @@
 package com.twmeares.osusumesan.services;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -9,13 +10,19 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.twmeares.osusumesan.models.DictionaryResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 public class DictionaryLookupService implements iDictionaryLookupService{
     private final String URL_PREFIX = "https://jisho.org/api/v1/search/words?keyword=";
+    private static final String TAG = "DictionaryLookupService";
     private RequestQueue queue;
     private Context context;
 
@@ -24,16 +31,19 @@ public class DictionaryLookupService implements iDictionaryLookupService{
         queue = Volley.newRequestQueue(this.context);
     }
 
+    // Searches dictionary and returns a single exact match only.
     @Override
     public void Search(String word, Callback callback) {
         queue.cancelAll(this);
 
+        StringRequest stringRequest = BuildSearchStringRequest(word, callback);
+        stringRequest.setTag(this);
 
-        StringRequest searchrequest = BuildSearchStringRequest(word, callback);
-        searchrequest.setTag(this);
-
-        queue.add(searchrequest);
+        queue.add(stringRequest);
     }
+
+    // TODO: in the future could create a SearchMany method which returns close matches.
+    // Would just need to remove the matchFound logic and return if any result is found.
 
     private StringRequest BuildSearchStringRequest(String word, Callback callback) {
         //Code modified based on https://wtmimura.com/post/calling-api-on-android-studio/
@@ -50,21 +60,52 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                 JSONObject entry = result.getJSONObject(i);
                                 if (word.equals(entry.getString("slug"))){
                                     matchFound = true;
-                                    entry.put("matchFound", true);
-                                    callback.DisplayDictResult(entry);
+                                    //entry.put("matchFound", true);
+
+                                    String dictForm = entry.getJSONArray("japanese").getJSONObject(0).getString("word");
+                                    String reading = entry.getJSONArray("japanese").getJSONObject(0).getString("reading");
+                                    List<String> meanings = new ArrayList<>();
+                                    JSONArray sensesArray = entry.getJSONArray("senses");
+
+                                    // each entry can have multiple senses
+                                    for (int j = 0 ; j < sensesArray.length(); j++) {
+                                        StringBuilder builder = new StringBuilder();
+                                        JSONArray senses = sensesArray.getJSONObject(j).getJSONArray("english_definitions");
+                                        // each english definition can have multiple values
+                                        // this for is a big ugly but tostring on the array and .Join didn't give the format
+                                        // I wanted and I didn't want to strip quotes in case they were part of the entry.
+                                        for (int k = 0 ; k < senses.length(); k++) {
+                                            if (k>0){
+                                                builder.append(", ");
+                                            }
+                                            String sense = senses.getString(k);
+                                            builder.append(sense);
+                                        }
+                                        meanings.add(builder.toString());
+                                    }
+                                    String jlptLvl = entry.getString("jlpt")
+                                            .replace("jlpt-", "")
+                                            .replace("[", "")
+                                            .replace("]", "");
+                                    DictionaryResult dictResult = new DictionaryResult(dictForm, reading, meanings, jlptLvl);
+                                    callback.DisplayDictResult(dictResult);
+                                    break;
                                 }
                             }
                             if (matchFound == false){
-                                //TODO log no match found
-                                JSONObject mismatchedResult = new JSONObject();
-                                mismatchedResult.put("matchFound", false);
-                                mismatchedResult.put("searchQuery", url.substring(URL_PREFIX.length()));
-                                mismatchedResult.put("result", result);
-                                callback.DisplayDictResult(mismatchedResult);
+                                Log.d(TAG, "No exact dictionary match found");
+                                //JSONObject mismatchedResult = new JSONObject();
+                                //mismatchedResult.put("matchFound", false);
+                                //mismatchedResult.put("searchQuery", url.substring(URL_PREFIX.length()));
+                                //mismatchedResult.put("result", result);
+                                //callback.DisplayDictResult(mismatchedResult);
+                                String searchQuery = url.substring(URL_PREFIX.length());
+                                String msg = "No exact match found for " + searchQuery;
+                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
                             }
                         } catch (JSONException e) {
                             Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
-                            //TODO add logging
+                            Log.e(TAG, "problem with parsing json. EX:" + e.getMessage());
                         }
                     }
                 },
@@ -73,7 +114,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                     public void onErrorResponse(VolleyError error) {
                         // display a simple message on the screen
                         Toast.makeText(context, "Got an error response from Jisho while searching.", Toast.LENGTH_LONG).show();
-                        //TODO add logging
+                        Log.e(TAG, "Error from Jisho while searching. " + error.getMessage());
                     }
                 });
     }

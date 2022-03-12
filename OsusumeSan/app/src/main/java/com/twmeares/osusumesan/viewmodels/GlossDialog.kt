@@ -1,13 +1,13 @@
 package com.twmeares.osusumesan.viewmodels
 
 import android.os.Bundle
+import android.text.SpannableStringBuilder
 import android.view.*
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
 import com.twmeares.osusumesan.databinding.GlossFragmentBinding
 import android.view.Gravity
-
-
+import com.twmeares.osusumesan.models.DictionaryResult
 
 
 //portions of this dialog class based on https://blog.mindorks.com/implementing-dialog-fragment-in-android
@@ -17,17 +17,16 @@ class GlossDialog : DialogFragment() {
     companion object {
         const val TAG = "GlossDialog"
 
-        private const val KEY_TITLE = "KEY_TITLE"
-        private const val KEY_SUBTITLE = "KEY_SUBTITLE"
+        private const val KEY_DICT_RESULT = "KEY_DICT_RESULT"
         private var _binding: GlossFragmentBinding? = null
         // This property is only valid between onCreateView and
         // onDestroyView.
         private val binding get() = _binding!!
 
-        fun newInstance(title: String, subTitle: String): GlossDialog {
+        fun newInstance(dictResult: DictionaryResult): GlossDialog {
             val args = Bundle()
-            args.putString(KEY_TITLE, title)
-            args.putString(KEY_SUBTITLE, subTitle)
+
+            args.putSerializable(KEY_DICT_RESULT, dictResult)
             val fragment = GlossDialog()
             fragment.arguments = args
             return fragment
@@ -68,8 +67,13 @@ class GlossDialog : DialogFragment() {
     }
 
     private fun setupView(view: View) {
-        binding.glossTitle.text = arguments?.getString(KEY_TITLE)
-        binding.glossDetails.text = arguments?.getString(KEY_SUBTITLE)
+        //TODO use span for style??
+//        val glossDetailsSSB = SpannableStringBuilder(arguments?.getString(KEY_SUBTITLE))
+//        //glossDetailsSSB.setSpan(StyleSpan(Typeface.BOLD), 0, 8, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+//        binding.glossDetails.text = glossDetailsSSB
+        var dictResult: DictionaryResult = arguments?.getSerializable(KEY_DICT_RESULT) as DictionaryResult
+        binding.glossTitle.text = dictResult.dictForm
+        binding.glossDetails.text = dictResult.meanings.first()
     }
 
     private fun setupClickListeners(view: View) {

@@ -10,7 +10,8 @@
         android:layout_width="@dimen/wrap_constraints"
         android:layout_height="wrap_content"
         android:text="@string/gloss_title"
-        android:textSize="@dimen/font_size_24"
+        android:textSize="@dimen/font_size_20"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

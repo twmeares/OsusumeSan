@@ -62,32 +62,46 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                     matchFound = true;
                                     //entry.put("matchFound", true);
 
-                                    String dictForm = entry.getJSONArray("japanese").getJSONObject(0).getString("word");
+                                    String dictForm = entry.getJSONArray("japanese").getJSONObject(0).optString("word", "");
                                     String reading = entry.getJSONArray("japanese").getJSONObject(0).getString("reading");
                                     List<String> meanings = new ArrayList<>();
+                                    List<String> pos = new ArrayList<>();
                                     JSONArray sensesArray = entry.getJSONArray("senses");
 
                                     // each entry can have multiple senses
                                     for (int j = 0 ; j < sensesArray.length(); j++) {
-                                        StringBuilder builder = new StringBuilder();
+                                        StringBuilder sensesBuilder = new StringBuilder();
+                                        StringBuilder posBuilder = new StringBuilder();
                                         JSONArray senses = sensesArray.getJSONObject(j).getJSONArray("english_definitions");
+                                        JSONArray posArray = sensesArray.getJSONObject(j).getJSONArray("parts_of_speech");
                                         // each english definition can have multiple values
                                         // this for is a big ugly but tostring on the array and .Join didn't give the format
                                         // I wanted and I didn't want to strip quotes in case they were part of the entry.
                                         for (int k = 0 ; k < senses.length(); k++) {
                                             if (k>0){
-                                                builder.append(", ");
+                                                sensesBuilder.append(", ");
                                             }
                                             String sense = senses.getString(k);
-                                            builder.append(sense);
+                                            sensesBuilder.append(sense);
                                         }
-                                        meanings.add(builder.toString());
+                                        meanings.add(sensesBuilder.toString());
+
+                                        // extract the parts of seach for this SensesArray Entry.
+                                        for (int k = 0 ; k < posArray.length(); k++) {
+                                            if (k>0){
+                                                posBuilder.append(", ");
+                                            }
+                                            String posValue = posArray.getString(k);
+                                            posBuilder.append(posValue);
+                                        }
+                                        pos.add(posBuilder.toString());
                                     }
                                     String jlptLvl = entry.getString("jlpt")
                                             .replace("jlpt-", "")
+                                            .replace("\"", "")
                                             .replace("[", "")
                                             .replace("]", "");
-                                    DictionaryResult dictResult = new DictionaryResult(dictForm, reading, meanings, jlptLvl);
+                                    DictionaryResult dictResult = new DictionaryResult(dictForm, reading, meanings, jlptLvl, pos);
                                     callback.DisplayDictResult(dictResult);
                                     break;
                                 }

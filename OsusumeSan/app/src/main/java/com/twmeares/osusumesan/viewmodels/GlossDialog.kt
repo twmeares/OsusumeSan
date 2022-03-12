@@ -1,7 +1,10 @@
 package com.twmeares.osusumesan.viewmodels
 
+import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Spannable
 import android.text.SpannableStringBuilder
+import android.text.style.StyleSpan
 import android.view.*
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
@@ -67,13 +70,21 @@ class GlossDialog : DialogFragment() {
     }
 
     private fun setupView(view: View) {
-        //TODO use span for style??
-//        val glossDetailsSSB = SpannableStringBuilder(arguments?.getString(KEY_SUBTITLE))
-//        //glossDetailsSSB.setSpan(StyleSpan(Typeface.BOLD), 0, 8, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-//        binding.glossDetails.text = glossDetailsSSB
         var dictResult: DictionaryResult = arguments?.getSerializable(KEY_DICT_RESULT) as DictionaryResult
-        binding.glossTitle.text = dictResult.dictForm
-        binding.glossDetails.text = dictResult.meanings.first()
+        var title = dictResult.dictForm + "   " + dictResult.reading
+        title = title.trim()
+        val glossTitileSSB = SpannableStringBuilder(title)
+        val titleBoldStart = 0
+        val titleBoldEnd = dictResult.dictForm.length
+        glossTitileSSB.setSpan(StyleSpan(Typeface.BOLD), titleBoldStart, titleBoldEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        binding.glossTitle.text = glossTitileSSB
+        var glossDetails = StringBuilder()
+        glossDetails.append(dictResult.meanings.first())
+        glossDetails.append(" (")
+        glossDetails.append(dictResult.pos.first())
+        glossDetails.append(") ")
+        glossDetails.append(dictResult.jlptLvl)
+        binding.glossDetails.text = glossDetails.toString()
     }
 
     private fun setupClickListeners(view: View) {

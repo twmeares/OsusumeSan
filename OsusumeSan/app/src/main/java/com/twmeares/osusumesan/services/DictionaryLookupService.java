@@ -33,10 +33,10 @@ public class DictionaryLookupService implements iDictionaryLookupService{
 
     // Searches dictionary and returns a single exact match only.
     @Override
-    public void Search(String word, Callback callback) {
+    public void Search(String word, Boolean isFuriganaEnabled, Callback callback) {
         queue.cancelAll(this);
 
-        StringRequest stringRequest = BuildSearchStringRequest(word, callback);
+        StringRequest stringRequest = BuildSearchStringRequest(word, isFuriganaEnabled, callback);
         stringRequest.setTag(this);
 
         queue.add(stringRequest);
@@ -45,7 +45,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
     // TODO: in the future could create a SearchMany method which returns close matches.
     // Would just need to remove the matchFound logic and return if any result is found.
 
-    private StringRequest BuildSearchStringRequest(String word, Callback callback) {
+    private StringRequest BuildSearchStringRequest(String word, Boolean isFuriganaEnabled, Callback callback) {
         //Code modified based on https://wtmimura.com/post/calling-api-on-android-studio/
         String url = URL_PREFIX + word;
 
@@ -101,20 +101,14 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                             .replace("\"", "")
                                             .replace("[", "")
                                             .replace("]", "");
-                                    DictionaryResult dictResult = new DictionaryResult(dictForm, reading, meanings, jlptLvl, pos);
+                                    DictionaryResult dictResult = new DictionaryResult(dictForm, reading, meanings, jlptLvl, pos, isFuriganaEnabled);
                                     callback.DisplayDictResult(dictResult);
                                     break;
                                 }
                             }
                             if (matchFound == false){
                                 Log.d(TAG, "No exact dictionary match found");
-                                //JSONObject mismatchedResult = new JSONObject();
-                                //mismatchedResult.put("matchFound", false);
-                                //mismatchedResult.put("searchQuery", url.substring(URL_PREFIX.length()));
-                                //mismatchedResult.put("result", result);
-                                //callback.DisplayDictResult(mismatchedResult);
-                                String searchQuery = url.substring(URL_PREFIX.length());
-                                String msg = "No exact match found for " + searchQuery;
+                                String msg = "No exact match found for " + word;
                                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
                             }
                         } catch (JSONException e) {

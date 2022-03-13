@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity() {
             if (token.isKanjiWord || token.isKanaWord) {
                 // TODO there is some kind of issue where clicking the word on the left edge of a row
                 // activates the clickable region on the right side word on the previous row
-                ssb.setSpan(GenClickableSpan(dictForm), basePosition, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                ssb.setSpan(GenClickableSpan(dictForm, token.isFuriganaEnabled), basePosition, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
 
@@ -140,10 +140,10 @@ class MainActivity : AppCompatActivity() {
         mainTextView.setMovementMethod(LinkMovementMethod.getInstance())
     }
 
-    fun GenClickableSpan(text: String): ClickableSpan {
+    fun GenClickableSpan(text: String, isFuriganaEnabled: Boolean): ClickableSpan {
         val clickableSpan: ClickableSpan = object : ClickableSpan() {
             override fun onClick(textView: View) {
-                dictService.Search(text, displayDictCallback)
+                dictService.Search(text, isFuriganaEnabled, displayDictCallback)
             }
 
             override fun updateDrawState(ds: TextPaint) {

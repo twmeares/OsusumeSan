@@ -1,6 +1,7 @@
 package com.twmeares.osusumesan.viewmodels
 
 import android.graphics.Typeface
+import android.opengl.Visibility
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -10,6 +11,7 @@ import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
 import com.twmeares.osusumesan.databinding.GlossFragmentBinding
 import android.view.Gravity
+import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.models.DictionaryResult
 
 
@@ -88,15 +90,29 @@ class GlossDialog : DialogFragment() {
     }
 
     private fun setupClickListeners(view: View) {
-        binding.btnPositive.setOnClickListener {
+        var dictResult: DictionaryResult = arguments?.getSerializable(KEY_DICT_RESULT) as DictionaryResult
+        if (dictResult.dictForm.equals("")){
+            // hide the btn and return early for words that don't have kanji i.e. no dictForm = "".
+            binding.btnFurigana.visibility = View.GONE
+            return
+        }
+
+        if (dictResult.isFuriganaEnabled){
+            binding.btnFurigana.text = getString(R.string.hide_furigana)
+        } else {
+            binding.btnFurigana.text = getString(R.string.show_furigana)
+        }
+
+        binding.btnFurigana.setOnClickListener {
             // TODO: Do some task here
+            // TODO pass the value of isFuriganaEnabled to whatever method gets added here.
             dismiss()
         }
-        binding.btnNegative.setOnClickListener {
-            // TODO: Do some task here
-            // probably going to remove this listener and it's button.
-            dismiss()
-        }
+//        binding.btnNegative.setOnClickListener {
+//            // TODO: Do some task here
+//            // probably going to remove this listener and it's button.
+//            dismiss()
+//        }
     }
 
 }

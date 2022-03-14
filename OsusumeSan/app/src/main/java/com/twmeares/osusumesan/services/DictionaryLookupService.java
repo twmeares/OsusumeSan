@@ -10,6 +10,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.mariten.kanatools.KanaConverter;
 import com.twmeares.osusumesan.models.DictionaryResult;
 
 import org.json.JSONArray;
@@ -19,6 +20,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DictionaryLookupService implements iDictionaryLookupService{
     private final String URL_PREFIX = "https://jisho.org/api/v1/search/words?keyword=";
@@ -33,10 +36,10 @@ public class DictionaryLookupService implements iDictionaryLookupService{
 
     // Searches dictionary and returns a single exact match only.
     @Override
-    public void Search(String word, Boolean isFuriganaEnabled, Callback callback) {
+    public void Search(String word, String reading, Boolean isFuriganaEnabled, Callback callback) {
         queue.cancelAll(this);
 
-        StringRequest stringRequest = BuildSearchStringRequest(word, isFuriganaEnabled, callback);
+        StringRequest stringRequest = BuildSearchStringRequest(word, reading, isFuriganaEnabled, callback);
         stringRequest.setTag(this);
 
         queue.add(stringRequest);
@@ -45,7 +48,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
     // TODO: in the future could create a SearchMany method which returns close matches.
     // Would just need to remove the matchFound logic and return if any result is found.
 
-    private StringRequest BuildSearchStringRequest(String word, Boolean isFuriganaEnabled, Callback callback) {
+    private StringRequest BuildSearchStringRequest(String word, String reading, Boolean isFuriganaEnabled, Callback callback) {
         //Code modified based on https://wtmimura.com/post/calling-api-on-android-studio/
         String url = URL_PREFIX + word;
 
@@ -58,12 +61,18 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                             Boolean matchFound = false;
                             for (int i = 0 ; i < result.length(); i++) {
                                 JSONObject entry = result.getJSONObject(i);
-                                if (word.equals(entry.getString("slug"))){
-                                    matchFound = true;
-                                    //entry.put("matchFound", true);
+                                String pattern = word + "-{0,1}[0-9]{0,9}";
+                                Pattern r = Pattern.compile(pattern);
+                                Matcher m = r.matcher(entry.getString("slug"));
 
+                                //int conversion_flags = KanaConverter.OP_ZEN_KATA_TO_ZEN_HIRA;
+                                // Should the api returned reading be checked against hiragana and furigana?
+                                //|| KanaConverter.convertKana(reading, conversion_flags).equals(entry.getJSONArray("japanese").getJSONObject(0).getString("reading"))
+                                if (m.find() && reading.equals(entry.getJSONArray("japanese").getJSONObject(0).getString("reading")))
+                                {
+                                    matchFound = true;
                                     String dictForm = entry.getJSONArray("japanese").getJSONObject(0).optString("word", "");
-                                    String reading = entry.getJSONArray("japanese").getJSONObject(0).getString("reading");
+                                    //String reading = entry.getJSONArray("japanese").getJSONObject(0).getString("reading");
                                     List<String> meanings = new ArrayList<>();
                                     List<String> pos = new ArrayList<>();
                                     JSONArray sensesArray = entry.getJSONArray("senses");

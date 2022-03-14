@@ -5,13 +5,15 @@ import static com.twmeares.osusumesan.utils.OsusumeSanUtils.isKatakana;
 
 import com.atilika.kuromoji.ipadic.Token;
 import com.mariten.kanatools.KanaConverter;
+import com.twmeares.osusumesan.services.KnowledgeService;
 import com.worksap.nlp.sudachi.Morpheme;
 
 public class OsusumeSanToken {
-    Token token;
-    Morpheme morph;
-    String reading;
-    Boolean useSudachi = false;
+    private Token token;
+    private Morpheme morph;
+    private String reading;
+    private Boolean useSudachi = false;
+    private Boolean isFuriganaEnabled = true;
     private static String REGEX_KANJI = ".*[\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff].*";
 
     OsusumeSanToken(Token token){
@@ -46,6 +48,14 @@ public class OsusumeSanToken {
         }
     }
 
+    public Boolean getIsHiraganaWord() {
+        if (useSudachi) {
+            return isHiragana(morph.dictionaryForm());
+        } else {
+            return isHiragana(token.getBaseForm());
+        }
+    }
+
     public String getReading(){
         return reading;
     }
@@ -67,27 +77,24 @@ public class OsusumeSanToken {
     }
 
     public Boolean getIsFuriganaEnabled(){
-        //TODO for now just return true. Eventually consult knowledge model.
-        return true;
+        return isFuriganaEnabled;
+    }
+
+    public void setIsFuriganaEnabled(Boolean isEnabled){
+        isFuriganaEnabled = isEnabled;
     }
 
     private void ConfigureToken(){
-        if (getIsKanjiWord()){
+        if (useSudachi){
+            reading = morph.readingForm();
+        } else {
+            reading = token.getReading();
+        }
+
+        if (getIsKanjiWord() || getIsHiraganaWord()){
             // Convert reading from dictionary supplied katakana to hiragana
-            if (useSudachi){
-                reading = morph.readingForm();
-            } else {
-                reading = token.getReading();
-            }
             int conversion_flags = KanaConverter.OP_ZEN_KATA_TO_ZEN_HIRA;
             reading = KanaConverter.convertKana(reading, conversion_flags);
-        } else {
-            if (useSudachi){
-                reading = morph.readingForm();
-            } else {
-                reading = token.getReading();
-            }
-
         }
     }
 

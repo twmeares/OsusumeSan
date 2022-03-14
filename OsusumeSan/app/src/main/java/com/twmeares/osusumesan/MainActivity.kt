@@ -11,16 +11,15 @@ import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import com.twmeares.osusumesan.models.DictionaryResult
 import com.twmeares.osusumesan.models.OsusumeSanTokenizer
 import com.twmeares.osusumesan.services.DictionaryLookupService
+import com.twmeares.osusumesan.services.KnowledgeService
 import com.twmeares.osusumesan.services.iDictionaryLookupService
 import com.twmeares.osusumesan.ui.RubySpan
 import com.twmeares.osusumesan.utils.DataBaseHelper
 import com.twmeares.osusumesan.utils.SysDictHelper
 import com.twmeares.osusumesan.viewmodels.GlossDialog
-import org.json.JSONObject
 import java.lang.Integer.min
 
 class MainActivity : AppCompatActivity() {
@@ -29,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dbHelper: DataBaseHelper
     private lateinit var dictService: DictionaryLookupService
     private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
+    private lateinit var knowledgeService: KnowledgeService
     private val TAG: String = "MainActivity"
     //private lateinit var displayDictCallback: iDictionaryLookupService.Callback
 
@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity() {
 
         //init
         initMainTextView()
+        knowledgeService = KnowledgeService.GetInstance(this)
         dictService = DictionaryLookupService(this)
 
         //displayDictCallback = ::DisplayDictResult
@@ -53,7 +54,8 @@ class MainActivity : AppCompatActivity() {
         var sysDictHelper = SysDictHelper(this)
         sysDictHelper.createDataBase()
         var dict = sysDictHelper.dictionary
-        val useSudachi = false
+
+        val useSudachi = true
         if (useSudachi){
             tokenizer = OsusumeSanTokenizer(dict)
         } else {
@@ -87,6 +89,7 @@ class MainActivity : AppCompatActivity() {
             var start = basePosition
             var end = basePosition + totalLength
             val underline = false
+            token.isFuriganaEnabled = knowledgeService.IsKnown(dictForm, reading)
 
             // Add furigana to the tokens that contain kanji.
             if (token.isKanjiWord && token.isFuriganaEnabled && reading != null && dictForm != null){
@@ -132,7 +135,7 @@ class MainActivity : AppCompatActivity() {
             if (token.isKanjiWord || token.isKanaWord) {
                 // TODO there is some kind of issue where clicking the word on the left edge of a row
                 // activates the clickable region on the right side word on the previous row
-                ssb.setSpan(GenClickableSpan(dictForm, token.isFuriganaEnabled), basePosition, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                ssb.setSpan(GenClickableSpan(dictForm, reading, token.isFuriganaEnabled), basePosition, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
 
@@ -140,10 +143,10 @@ class MainActivity : AppCompatActivity() {
         mainTextView.setMovementMethod(LinkMovementMethod.getInstance())
     }
 
-    fun GenClickableSpan(text: String, isFuriganaEnabled: Boolean): ClickableSpan {
+    fun GenClickableSpan(word: String, reading: String, isFuriganaEnabled: Boolean): ClickableSpan {
         val clickableSpan: ClickableSpan = object : ClickableSpan() {
             override fun onClick(textView: View) {
-                dictService.Search(text, isFuriganaEnabled, displayDictCallback)
+                dictService.Search(word, reading, isFuriganaEnabled, displayDictCallback)
             }
 
             override fun updateDrawState(ds: TextPaint) {

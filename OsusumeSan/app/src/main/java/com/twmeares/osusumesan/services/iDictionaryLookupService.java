@@ -6,7 +6,7 @@ import org.json.JSONObject;
 
 public interface iDictionaryLookupService {
 
-    public void Search(String word, Boolean isFuriganaEnabled, Callback callback);
+    public void Search(String word, String reading, Boolean isFuriganaEnabled, Callback callback);
 
     public interface Callback {
         void DisplayDictResult(DictionaryResult result);

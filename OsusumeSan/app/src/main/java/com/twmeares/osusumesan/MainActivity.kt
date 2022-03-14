@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         sysDictHelper.createDataBase()
         var dict = sysDictHelper.dictionary
 
-        val useSudachi = true
+        val useSudachi = false
         if (useSudachi){
             tokenizer = OsusumeSanTokenizer(dict)
         } else {

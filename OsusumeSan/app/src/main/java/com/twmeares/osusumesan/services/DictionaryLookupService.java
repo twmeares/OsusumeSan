@@ -65,10 +65,10 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                 Pattern r = Pattern.compile(pattern);
                                 Matcher m = r.matcher(entry.getString("slug"));
 
-                                //int conversion_flags = KanaConverter.OP_ZEN_KATA_TO_ZEN_HIRA;
-                                // Should the api returned reading be checked against hiragana and furigana?
-                                //|| KanaConverter.convertKana(reading, conversion_flags).equals(entry.getJSONArray("japanese").getJSONObject(0).getString("reading"))
-                                if (m.find() && reading.equals(entry.getJSONArray("japanese").getJSONObject(0).getString("reading")))
+                                int conversion_flags = KanaConverter.OP_ZEN_KATA_TO_ZEN_HIRA;
+                                if (m.find()
+                                    && ( reading.equals(entry.getJSONArray("japanese").getJSONObject(0).getString("reading"))
+                                    || reading.equals( KanaConverter.convertKana(entry.getJSONArray("japanese").getJSONObject(0).getString("reading"), conversion_flags)) ))
                                 {
                                     matchFound = true;
                                     String dictForm = entry.getJSONArray("japanese").getJSONObject(0).optString("word", "");

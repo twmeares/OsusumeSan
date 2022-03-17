@@ -11,6 +11,7 @@ import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
 import com.twmeares.osusumesan.databinding.GlossFragmentBinding
 import android.view.Gravity
+import com.twmeares.osusumesan.MainActivity
 import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.models.DictionaryResult
 
@@ -108,6 +109,8 @@ class GlossDialog : DialogFragment() {
         binding.btnFurigana.setOnClickListener {
             // TODO: Do some task here
             // TODO pass the value of isFuriganaEnabled to whatever method gets added here.
+            val activity : MainActivity = getActivity() as MainActivity
+            activity.UpdateFurigana(dictResult.dictForm, !dictResult.isFuriganaEnabled)
             dismiss()
         }
 

@@ -118,6 +118,8 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                             if (matchFound == false){
                                 Log.d(TAG, "No exact dictionary match found");
                                 String msg = "No exact match found for " + word;
+                                // TODO might want to still call the callback to allow things like hiding
+                                // furigana even if it's not showing in dictionary.
                                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
                             }
                         } catch (JSONException e) {

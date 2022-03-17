@@ -3,6 +3,7 @@ package com.twmeares.osusumesan
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
@@ -11,6 +12,7 @@ import android.util.Log
 import android.view.View
 import android.widget.TextView
 import com.twmeares.osusumesan.models.DictionaryResult
+import com.twmeares.osusumesan.models.OsusumeSanToken
 import com.twmeares.osusumesan.models.OsusumeSanTokenizer
 import com.twmeares.osusumesan.services.DictionaryLookupService
 import com.twmeares.osusumesan.services.KnowledgeService
@@ -29,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dictService: DictionaryLookupService
     private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
     private lateinit var knowledgeService: KnowledgeService
+    private lateinit var tokens: List<OsusumeSanToken>
     private val TAG: String = "MainActivity"
 
 
@@ -78,7 +81,7 @@ class MainActivity : AppCompatActivity() {
 
     fun displayText(text: String){
         val ssb = SpannableStringBuilder(text)
-        var tokens = tokenizer.Tokenize(text)
+        tokens = tokenizer.Tokenize(text)
 
         tokens.forEachIndexed { tokenIdx, token ->
             val reading = token.reading
@@ -90,50 +93,54 @@ class MainActivity : AppCompatActivity() {
             val underline = false
             token.isFuriganaEnabled = knowledgeService.IsKnown(dictForm, reading)
 
-            // Add furigana to the tokens that contain kanji.
-            if (token.isKanjiWord && token.isFuriganaEnabled && reading != null && dictForm != null){
-                val furiHelper = dbHelper.getFuriganaFromDB(dictForm, reading)
-                if (furiHelper != null) {
-                    val furiList = furiHelper.split(";")
-                    furiList.forEachIndexed { furiIdx, item ->
-                        val splitItem = item.split(":")
-                        if(splitItem.size == 2) {
-                            var rubyIdx : Int
-                            var rubyIdxEnd : Int
-                            val rubyIdxStr = splitItem[0]
-                            try {
-                                rubyIdx = rubyIdxStr.toInt()
-                                rubyIdxEnd = rubyIdx + 1
-                            } catch (ex: NumberFormatException){
-                                if (rubyIdxStr.contains("-") && rubyIdxStr.last().isDigit() && rubyIdxStr.first().isDigit()){
-                                    // furigana that doesn't evenly split on the kanji word e.g.
-                                    // 大人 is 0-1:おとな
-                                    // grab the last digit as the rubyIdxEnd
-                                    rubyIdx = rubyIdxStr.first().digitToInt()
-                                    rubyIdxEnd = rubyIdxStr.last().digitToInt() + 1
-                                } else {
-                                    Log.d(TAG, dictForm + " not found in JMDictFurigana.")
-                                    rubyIdx = furiIdx
+            // TODO add a check to allow showing furigana only for the first n times. Can use a dict
+            // and if the number is exceeded then don't do this inner section.
+            var furiganaLimitExceeded = false //TODO replace with the real thing.
+
+            if (furiganaLimitExceeded == false) {
+                // Add furigana to the tokens that contain kanji.
+                if (token.isKanjiWord && token.isFuriganaEnabled && reading != null && dictForm != null){
+                    val furiHelper = dbHelper.getFuriganaFromDB(dictForm, reading)
+                    if (furiHelper != null) {
+                        val furiList = furiHelper.split(";")
+                        furiList.forEachIndexed { furiIdx, item ->
+                            val splitItem = item.split(":")
+                            if(splitItem.size == 2) {
+                                var rubyIdx : Int
+                                var rubyIdxEnd : Int
+                                val rubyIdxStr = splitItem[0]
+                                try {
+                                    rubyIdx = rubyIdxStr.toInt()
                                     rubyIdxEnd = rubyIdx + 1
+                                } catch (ex: NumberFormatException){
+                                    if (rubyIdxStr.contains("-") && rubyIdxStr.last().isDigit() && rubyIdxStr.first().isDigit()){
+                                        // furigana that doesn't evenly split on the kanji word e.g.
+                                        // 大人 is 0-1:おとな
+                                        // grab the last digit as the rubyIdxEnd
+                                        rubyIdx = rubyIdxStr.first().digitToInt()
+                                        rubyIdxEnd = rubyIdxStr.last().digitToInt() + 1
+                                    } else {
+                                        Log.d(TAG, dictForm + " not found in JMDictFurigana.")
+                                        rubyIdx = furiIdx
+                                        rubyIdxEnd = rubyIdx + 1
+                                    }
                                 }
+                                // normal case when the furi position info was found in furiHelper.
+                                val ruby = splitItem[1]
+                                start = basePosition + rubyIdx
+                                end = basePosition + rubyIdxEnd
+                                ssb.setSpan(RubySpan(ruby, underline), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                             }
-                            // normal case when the furi position info was found in furiHelper.
-                            val ruby = splitItem[1]
-                            start = basePosition + rubyIdx
-                            end = basePosition + rubyIdxEnd
-                            ssb.setSpan(RubySpan(ruby, underline), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                         }
+                    } else {
+                        // failed to find the word in jmDict.db, possible bad tokenization of compound word.
+                        Log.d(TAG, dictForm + " not found in JMDictFurigana.")
+                        ssb.setSpan(RubySpan(reading, underline), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     }
-                } else {
-                    // failed to find the word in jmDict.db, possible bad tokenization of compound word.
-                    Log.d(TAG, dictForm + " not found in JMDictFurigana.")
-                    ssb.setSpan(RubySpan(reading, underline), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
 
             if (token.isKanjiWord || token.isKanaWord) {
-                // TODO there is some kind of issue where clicking the word on the left edge of a row
-                // activates the clickable region on the right side word on the previous row
                 ssb.setSpan(GenClickableSpan(dictForm, reading, token.isFuriganaEnabled), basePosition, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
@@ -165,5 +172,29 @@ class MainActivity : AppCompatActivity() {
     // Display the dictionary info in a gloss dialog
     fun DisplayDictResult(dictResult: DictionaryResult) {
         GlossDialog.newInstance(dictResult).show(supportFragmentManager, GlossDialog.TAG)
+    }
+
+    // Change the furigana setting for the word
+    fun UpdateFurigana(word: String, enableFurigana: Boolean ){
+        if (enableFurigana == true) {
+            // TODO consider making a function for the content that was used in display text that
+            // is needed for getting the right jmdictFurigana stuff etc. So it can be reused here.
+
+        } else {
+            // disable furigana
+            tokens.forEachIndexed { tokenIdx, token ->
+                if (token.dictForm.equals(word)){
+                    // remove the spans for this word (could be multiple)
+                    val totalLength = min(token.dictForm.length, token.reading.length)
+                    var start = token.position
+                    var end = token.position + totalLength
+                    var spannable = mainTextView.text as Spannable
+                    var spansToRemove = spannable.getSpans(start, end, RubySpan::class.java)
+                    spansToRemove.forEach { span ->
+                            spannable.removeSpan(span)
+                    }
+                }
+            }
+        }
     }
 }

@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
-import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.View
@@ -16,6 +15,7 @@ import com.twmeares.osusumesan.models.OsusumeSanTokenizer
 import com.twmeares.osusumesan.services.DictionaryLookupService
 import com.twmeares.osusumesan.services.KnowledgeService
 import com.twmeares.osusumesan.services.iDictionaryLookupService
+import com.twmeares.osusumesan.ui.MovementMethod
 import com.twmeares.osusumesan.ui.RubySpan
 import com.twmeares.osusumesan.utils.DataBaseHelper
 import com.twmeares.osusumesan.utils.SysDictHelper
@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
     private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
     private lateinit var knowledgeService: KnowledgeService
     private val TAG: String = "MainActivity"
-    //private lateinit var displayDictCallback: iDictionaryLookupService.Callback
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +47,6 @@ class MainActivity : AppCompatActivity() {
         knowledgeService = KnowledgeService.GetInstance(this)
         dictService = DictionaryLookupService(this)
 
-        //displayDictCallback = ::DisplayDictResult
         dbHelper = DataBaseHelper(this)
         dbHelper.createDataBase()
         dbHelper.openDataBase()
@@ -140,19 +139,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         mainTextView.text = ssb
-        mainTextView.setMovementMethod(LinkMovementMethod.getInstance())
+        mainTextView.setMovementMethod(MovementMethod.getInstance())
+
+        //TODO is this necessary/what does it do?
+        mainTextView.setLinksClickable(true);
     }
 
     fun GenClickableSpan(word: String, reading: String, isFuriganaEnabled: Boolean): ClickableSpan {
         val clickableSpan: ClickableSpan = object : ClickableSpan() {
             override fun onClick(textView: View) {
+                Log.d(TAG, "Search dictionary for " + word)
                 dictService.Search(word, reading, isFuriganaEnabled, displayDictCallback)
             }
 
             override fun updateDrawState(ds: TextPaint) {
                 super.updateDrawState(ds)
                 ds.isUnderlineText = false
-                ds.color = Color.BLACK
+                ds.color = Color.DKGRAY
                 ds.bgColor = Color.TRANSPARENT
             }
         }

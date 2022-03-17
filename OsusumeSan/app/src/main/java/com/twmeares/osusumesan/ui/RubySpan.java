@@ -16,6 +16,7 @@
 package com.twmeares.osusumesan.ui;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.text.Spanned;
@@ -229,7 +230,10 @@ public final class RubySpan extends ReplacementSpan {
         final int oldColor = paint.getColor();
         if (useColor) {
             paint.setColor(color);
+        } else {
+            paint.setColor(Color.DKGRAY);
         }
+
         final boolean oldUnderline = paint.isUnderlineText();
         paint.setUnderlineText(underline);
 

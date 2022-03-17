@@ -110,6 +110,7 @@ class GlossDialog : DialogFragment() {
             // TODO pass the value of isFuriganaEnabled to whatever method gets added here.
             dismiss()
         }
+
 //        binding.btnNegative.setOnClickListener {
 //            // TODO: Do some task here
 //            // probably going to remove this listener and it's button.

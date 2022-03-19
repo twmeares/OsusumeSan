@@ -9,15 +9,18 @@ public class DictionaryResult implements Serializable {
     private String dictForm;
     private List<String> meanings;
     private List<String> pos;
+    private List<String> tags;
     private String jlptLvl;
     private Boolean isFuriganaEnabled;
 
-    public DictionaryResult(String dictForm, String reading, List<String> meanings, String jlptLvl, List<String> pos, Boolean isFuriganaEnabled){
+    public DictionaryResult(String dictForm, String reading, List<String> meanings, String jlptLvl,
+                            List<String> pos, List<String> tags, Boolean isFuriganaEnabled){
         this.reading = reading;
         this.dictForm = dictForm;
         this.meanings = meanings;
         this.jlptLvl = jlptLvl;
         this.pos = pos;
+        this.tags = tags;
         this.isFuriganaEnabled = isFuriganaEnabled;
     }
 
@@ -35,6 +38,10 @@ public class DictionaryResult implements Serializable {
 
     public List<String> getPos() {
         return pos;
+    }
+
+    public List<String> getTags() {
+        return tags;
     }
 
     public String getJlptLvl() {

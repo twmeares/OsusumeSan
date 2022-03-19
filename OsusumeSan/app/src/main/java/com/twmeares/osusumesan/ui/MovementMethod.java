@@ -32,6 +32,7 @@ public class MovementMethod extends LinkMovementMethod {
         // This code was inspired by various stack overflow post and adapted to this projects needs
         // This solves the issue of two clickable spans that are "overlapping" and ensures the
         // click event goes to the span with the closest center to the click.
+        // https://stackoverflow.com/questions/9274331/clickablespan-strange-behavioronclick-called-when-clicking-empty-space
         if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP) {
             int x = (int) event.getX();
             int y = (int) event.getY();
@@ -63,11 +64,27 @@ public class MovementMethod extends LinkMovementMethod {
                     int startSpan1 = buffer.getSpanStart(spans[1]);
                     int endSpan1 = buffer.getSpanEnd(spans[1]);
 
+                    // if the span stretches past the line but actually ends at the last position of
+                    // the line then the endX for the span will be 0. This needs to be corrected by
+                    // setting it equal to the x value for the end of the line.
+                    int lineEnd = layout.getLineEnd(line);
+
                     double startXOfSpan0 = layout.getPrimaryHorizontal(startSpan0);
-                    double endXOfSpan0 = layout.getPrimaryHorizontal(endSpan0);
+                    double endXOfSpan0;
+                    if (lineEnd == endSpan0){
+                        endXOfSpan0 = layout.getLineRight(line);
+                    } else {
+                        endXOfSpan0 = layout.getPrimaryHorizontal(endSpan0);
+                    }
+
 
                     double startXOfSpan1 = layout.getPrimaryHorizontal(startSpan1);
-                    double endXOfSpan1 = layout.getPrimaryHorizontal(endSpan1);
+                    double endXOfSpan1;
+                    if (lineEnd == endSpan1){
+                        endXOfSpan1 = layout.getLineRight(line);
+                    } else {
+                        endXOfSpan1 = layout.getPrimaryHorizontal(endSpan1);
+                    }
 
                     double centerSpan0 = (endXOfSpan0 + startXOfSpan0) / 2;
                     double centerSpan1 = (endXOfSpan1 + startXOfSpan1) / 2;

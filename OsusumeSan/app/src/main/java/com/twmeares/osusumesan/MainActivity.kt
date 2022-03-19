@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         //var text = "大人買い" //doesn't work properly due to being tokenized as two words instead of one
         var text = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
         //var text = "食べてる"
+        //var text = "にほんごをべんきょうする"
 
         //init
         initMainTextView()

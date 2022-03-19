@@ -85,11 +85,28 @@ class GlossDialog : DialogFragment() {
         }
         binding.glossTitle.text = glossTitileSSB
         var glossDetails = StringBuilder()
-        glossDetails.append(dictResult.meanings.first())
-        glossDetails.append(" (")
-        glossDetails.append(dictResult.pos.first())
-        glossDetails.append(") ")
-        glossDetails.append(dictResult.jlptLvl)
+        if (dictResult.meanings.size > 0) {
+            glossDetails.append(dictResult.meanings.first())
+        }
+
+        if (dictResult.pos.size > 0) {
+            glossDetails.append(" (")
+            glossDetails.append(dictResult.pos.first())
+            glossDetails.append(")")
+        }
+
+
+        if (dictResult.tags.size > 0 && !dictResult.tags.first().equals("")) {
+            glossDetails.append(" (")
+            glossDetails.append(dictResult.tags.first())
+            glossDetails.append(")")
+        }
+
+        if (!dictResult.jlptLvl.equals("[]")) {
+            glossDetails.append(" ")
+            glossDetails.append(dictResult.jlptLvl)
+        }
+
         binding.glossDetails.text = glossDetails.toString()
     }
 

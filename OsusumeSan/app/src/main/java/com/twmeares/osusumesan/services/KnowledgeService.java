@@ -128,13 +128,13 @@ public class KnowledgeService extends SQLiteOpenHelper{
     }
 
     /**
-     * Check if a word is known or unkown to the user. default will be true for unknown words
+     * Check if a word is known or unkown to the user. default will be false for unknown words
      */
     public Boolean IsKnown(String word, String reading){
         String query = String.format("select isknown From knowledge where word = '%s' and reading = '%s'",
                 word, reading);
         Cursor cursor = sqliteDataBase.rawQuery(query, null);
-        Boolean isKnown = true;
+        Boolean isKnown = false;
         if(cursor.getCount()>0){
             if(cursor.moveToFirst()){
                 do{
@@ -142,6 +142,7 @@ public class KnowledgeService extends SQLiteOpenHelper{
                 }while (cursor.moveToNext());
             }
         }
+        cursor.close();
         return isKnown;
     }
 
@@ -152,6 +153,8 @@ public class KnowledgeService extends SQLiteOpenHelper{
         String query = String.format("update knowledge set isknown = %d where word = '%s' and reading = '%s'",
                 (isKnown ? 1: 0), word, reading);
         Cursor cursor = sqliteDataBase.rawQuery(query, null);
+        cursor.moveToFirst();
+        cursor.close();
         // TODO
     }
 

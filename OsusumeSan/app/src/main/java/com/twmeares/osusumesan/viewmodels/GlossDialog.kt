@@ -1,5 +1,6 @@
 package com.twmeares.osusumesan.viewmodels
 
+import android.content.DialogInterface
 import android.graphics.Typeface
 import android.opengl.Visibility
 import android.os.Bundle
@@ -109,16 +110,21 @@ class GlossDialog : DialogFragment() {
         binding.btnFurigana.setOnClickListener {
             // TODO: Do some task here
             // TODO pass the value of isFuriganaEnabled to whatever method gets added here.
-            val activity : MainActivity = getActivity() as MainActivity
-            activity.UpdateFurigana(dictResult.dictForm, !dictResult.isFuriganaEnabled)
+            val activity : MainActivity? = getActivity() as? MainActivity
+            if(activity != null){
+                activity.UpdateFurigana(dictResult.dictForm, !dictResult.isFuriganaEnabled)
+            }
             dismiss()
         }
 
-//        binding.btnNegative.setOnClickListener {
-//            // TODO: Do some task here
-//            // probably going to remove this listener and it's button.
-//            dismiss()
-//        }
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        val activity : MainActivity? = getActivity() as? MainActivity
+        if(activity != null){
+            activity.ClearTextSelection()
+        }
     }
 
 }

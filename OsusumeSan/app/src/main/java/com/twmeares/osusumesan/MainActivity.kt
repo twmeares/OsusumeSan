@@ -3,10 +3,7 @@ package com.twmeares.osusumesan
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.TextPaint
+import android.text.*
 import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.View
@@ -196,5 +193,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    // removes the selection (highlight) form the text input
+    fun ClearTextSelection(){
+        var spannable = mainTextView.text as Spannable
+        Selection.removeSelection(spannable)
     }
 }

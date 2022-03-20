@@ -7,4 +7,13 @@
 
     <string name="btnPrevTxt">Prev</string>
     <string name="btnNextTxt">Next</string>
+
+    <string name="inputTextTitle">Input text to generate furigana</string>
+    <string name="btnInputText">Process Text</string>
+    <string name="inputTextHint">paste your text here</string>
+
+    <string name="btnReadingList">Reading List</string>
+    <string name="btnResumeReading">Resume Last Reading</string>
+    <string name="btnInputText_MenuPage">Input Text</string>
+    <string name="btnSettings">Settings</string>
 </resources>

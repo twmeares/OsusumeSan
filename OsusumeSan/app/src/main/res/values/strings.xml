@@ -4,4 +4,7 @@
     <string name="gloss_details">Details</string>
     <string name="hide_furigana">hide furigana</string>
     <string name="show_furigana">show furigana</string>
+
+    <string name="btnPrevTxt">Prev</string>
+    <string name="btnNextTxt">Next</string>
 </resources>

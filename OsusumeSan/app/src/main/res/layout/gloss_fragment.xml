@@ -19,18 +19,19 @@
         android:id="@+id/glossDetails"
         android:layout_width="@dimen/wrap_constraints"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dimen_16"
+        android:layout_marginTop="5dp"
         android:text="@string/gloss_details"
         android:textSize="@dimen/font_size_16"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/glossTitle" />
+        app:layout_constraintTop_toBottomOf="@id/btnFurigana" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnFurigana"
         android:layout_width="@dimen/dimen_100"
         android:layout_height="wrap_content"
         android:text="OK"
+        android:background="@drawable/better_button"
         app:layout_constraintTop_toTopOf="@+id/glossTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/glossTitle"

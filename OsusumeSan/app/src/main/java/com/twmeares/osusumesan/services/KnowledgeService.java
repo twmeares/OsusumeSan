@@ -154,6 +154,7 @@ public class KnowledgeService extends SQLiteOpenHelper{
     public void UpdateKnowledge(String word, String reading, Boolean isKnown){
         Cursor cursor = null;
         try {
+            //insert/replace to handle both new and old words.
             String query = String.format("insert or replace into knowledge (word, reading, book, jlptlvl, isknown) " +
                             "values ('%s', " +
                             "'%s', " +
@@ -161,8 +162,6 @@ public class KnowledgeService extends SQLiteOpenHelper{
                             "(select jlptlvl from knowledge where word = '%s' and reading = '%s'), " +
                             "%d)",
                         word, reading, word, reading, word, reading, (isKnown ? 1: 0));
-            //cursor = sqliteDataBase.rawQuery(query, null);
-            //cursor.moveToFirst();
             sqliteDataBase.execSQL(query);
         } catch (Exception ex){
             String msg = ex.getMessage();

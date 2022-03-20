@@ -132,6 +132,7 @@ class MainActivity : AppCompatActivity() {
         var knowledgeUpdated = false
         var isKnown = !enableFurigana
         if (enableFurigana == false) {
+            // disable furigana
             tokens.forEachIndexed { tokenIdx, token ->
                 if (token.dictForm.equals(word)){
                     if (knowledgeUpdated == false){
@@ -152,7 +153,7 @@ class MainActivity : AppCompatActivity() {
             }
 
         } else {
-            // disable furigana
+            // enable furigana
             var spannable = mainTextView.text as Spannable
             tokens.forEachIndexed { tokenIdx, token ->
                 if (token.dictForm.equals(word)){

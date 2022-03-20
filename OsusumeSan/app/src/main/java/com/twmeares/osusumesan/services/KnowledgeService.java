@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class KnowledgeService extends SQLiteOpenHelper{
     // Data Base Name.
@@ -21,6 +22,7 @@ public class KnowledgeService extends SQLiteOpenHelper{
     private static String DB_PATH;
     // Data Base Version.
     private static final int DATABASE_VERSION = 1;
+    private final String TAG = "KnowledgeService";
 
     private static KnowledgeService instance;
 
@@ -150,12 +152,28 @@ public class KnowledgeService extends SQLiteOpenHelper{
      * mark a given word as known/unknown to update knowledge model.
      */
     public void UpdateKnowledge(String word, String reading, Boolean isKnown){
-        String query = String.format("update knowledge set isknown = %d where word = '%s' and reading = '%s'",
-                (isKnown ? 1: 0), word, reading);
-        Cursor cursor = sqliteDataBase.rawQuery(query, null);
-        cursor.moveToFirst();
-        cursor.close();
-        // TODO
+        Cursor cursor = null;
+        try {
+            String query = String.format("insert or replace into knowledge (word, reading, book, jlptlvl, isknown) " +
+                            "values ('%s', " +
+                            "'%s', " +
+                            "(select book from knowledge where word = '%s' and reading = '%s'), " +
+                            "(select jlptlvl from knowledge where word = '%s' and reading = '%s'), " +
+                            "%d)",
+                        word, reading, word, reading, word, reading, (isKnown ? 1: 0));
+            //cursor = sqliteDataBase.rawQuery(query, null);
+            //cursor.moveToFirst();
+            sqliteDataBase.execSQL(query);
+        } catch (Exception ex){
+            String msg = ex.getMessage();
+            Log.e(TAG, msg);
+        } finally {
+            if (cursor != null){
+                cursor.close();
+            }
+
+        }
+        // TODO what about case when the words doesn't exist in the dict.
     }
 
     //TODO make methods for updating each of the book/jlpt level based words.

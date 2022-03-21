@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.OsusumeSan">
         <activity
-            android:name=".ReadingActivity"
+            android:name=".view.ReadingActivity"
             android:exported="true" />
         <activity
             android:name=".view.MainMenuActivity"

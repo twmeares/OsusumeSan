@@ -1,4 +1,4 @@
-package com.twmeares.osusumesan.viewmodels
+package com.twmeares.osusumesan.view
 
 import android.content.DialogInterface
 import android.graphics.Typeface
@@ -11,7 +11,6 @@ import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
 import com.twmeares.osusumesan.databinding.GlossFragmentBinding
 import android.view.Gravity
-import com.twmeares.osusumesan.ReadingActivity
 import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.models.DictionaryResult
 

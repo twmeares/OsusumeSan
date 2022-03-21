@@ -1,4 +1,4 @@
-package com.twmeares.osusumesan
+package com.twmeares.osusumesan.view
 
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
@@ -8,6 +8,7 @@ import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.View
 import android.widget.TextView
+import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.models.DictionaryResult
 import com.twmeares.osusumesan.models.OsusumeSanToken
 import com.twmeares.osusumesan.models.OsusumeSanTokenizer
@@ -16,15 +17,14 @@ import com.twmeares.osusumesan.services.KnowledgeService
 import com.twmeares.osusumesan.services.iDictionaryLookupService
 import com.twmeares.osusumesan.ui.MovementMethod
 import com.twmeares.osusumesan.ui.RubySpan
-import com.twmeares.osusumesan.utils.DataBaseHelper
-import com.twmeares.osusumesan.utils.SysDictHelper
-import com.twmeares.osusumesan.viewmodels.GlossDialog
+import com.twmeares.osusumesan.services.JMDictFuriHelper
+import com.twmeares.osusumesan.services.SysDictHelper
 import java.lang.Integer.min
 
 class ReadingActivity : AppCompatActivity() {
     private lateinit var tokenizer: OsusumeSanTokenizer
     private lateinit var mainTextView: TextView
-    private lateinit var dbHelper: DataBaseHelper
+    private lateinit var jmDictFuriHelper: JMDictFuriHelper
     private lateinit var dictService: DictionaryLookupService
     private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
     private lateinit var knowledgeService: KnowledgeService
@@ -48,15 +48,18 @@ class ReadingActivity : AppCompatActivity() {
         knowledgeService = KnowledgeService.GetInstance(this)
         dictService = DictionaryLookupService(this)
 
-        dbHelper = DataBaseHelper(this)
-        dbHelper.createDataBase()
-        dbHelper.openDataBase()
-        var sysDictHelper = SysDictHelper(this)
-        sysDictHelper.createDataBase()
-        var dict = sysDictHelper.dictionary
+        jmDictFuriHelper =
+            JMDictFuriHelper(this)
+        jmDictFuriHelper.createDataBase()
+        jmDictFuriHelper.openDataBase()
+
 
         val useSudachi = false
         if (useSudachi){
+            var sysDictHelper =
+                SysDictHelper(this)
+            sysDictHelper.createDataBase()
+            var dict = sysDictHelper.dictionary
             tokenizer = OsusumeSanTokenizer(dict)
         } else {
             tokenizer = OsusumeSanTokenizer()
@@ -191,7 +194,7 @@ class ReadingActivity : AppCompatActivity() {
         if (furiganaLimitExceeded == false) {
             // Add furigana to the tokens that contain kanji.
             if (token.isKanjiWord && token.isFuriganaEnabled && reading != null && dictForm != null){
-                val furiHelper = dbHelper.getFuriganaFromDB(dictForm, reading)
+                val furiHelper = jmDictFuriHelper.getFuriganaFromDB(dictForm, reading)
                 if (furiHelper != null) {
                     val furiList = furiHelper.split(";")
                     furiList.forEachIndexed { furiIdx, item ->

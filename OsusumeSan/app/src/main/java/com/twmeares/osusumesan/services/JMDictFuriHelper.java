@@ -1,4 +1,4 @@
-package com.twmeares.osusumesan.utils;
+package com.twmeares.osusumesan.services;
 // This code taken from stackexchange
 // https://stackoverflow.com/questions/9109438/how-to-use-an-existing-database-with-an-android-application
 import java.io.File;
@@ -13,7 +13,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-public class DataBaseHelper extends SQLiteOpenHelper{
+public class JMDictFuriHelper extends SQLiteOpenHelper{
     // Data Base Name.
     private static final String DATABASE_NAME = "jmdict.db";
     //The Android's default system path of your application database.
@@ -35,7 +35,7 @@ public class DataBaseHelper extends SQLiteOpenHelper{
      *                              3. Cursor Factory.
      *                              4. Data Base Version.
      */
-    public DataBaseHelper(Context context) {
+    public JMDictFuriHelper(Context context) {
         super(context, DATABASE_NAME, null ,DATABASE_VERSION);
         this.context = context;
         DB_PATH = context.getDatabasePath(DATABASE_NAME).getAbsolutePath();

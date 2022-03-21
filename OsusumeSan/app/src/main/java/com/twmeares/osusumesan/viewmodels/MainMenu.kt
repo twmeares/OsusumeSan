@@ -4,7 +4,7 @@ import android.content.Intent
 
 import android.app.Activity
 import android.util.Log
-import com.twmeares.osusumesan.ReadingActivity
+import com.twmeares.osusumesan.view.ReadingActivity
 
 
 class MainMenu() {

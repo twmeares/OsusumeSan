@@ -9,7 +9,6 @@ import android.util.Log
 import android.view.View
 import android.widget.TextView
 import com.twmeares.osusumesan.R
-import com.twmeares.osusumesan.databinding.ActivityMainMenuBinding
 import com.twmeares.osusumesan.databinding.ActivityReadingBinding
 import com.twmeares.osusumesan.models.DictionaryResult
 import com.twmeares.osusumesan.models.OsusumeSanToken
@@ -33,6 +32,7 @@ class ReadingActivity : AppCompatActivity() {
     private lateinit var knowledgeService: KnowledgeService
     private lateinit var tokens: List<OsusumeSanToken>
     private val TAG: String = "ReadingActivity"
+    private lateinit var text: String
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,12 +40,26 @@ class ReadingActivity : AppCompatActivity() {
         binding = ActivityReadingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //test strings for now
-        //var text = "頑張り屋"
-        //var text = "大人買い" //doesn't work properly due to being tokenized as two words instead of one
-        var text = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
-        //var text = "食べてる"
-        //var text = "にほんごをべんきょうする"
+        // TODO maybe add another getExtra for text title to be abel to query the text from db or
+        // if it's feasible just pass the full text here. See stub below
+        val inputText = intent.getStringExtra("inputText")
+        val bookText = intent.getStringExtra("bookText")
+        if(inputText != null){
+            text = inputText.toString()
+            Log.i(TAG, "Received input text " + text)
+        } else if (bookText != null){
+            // Stub. Do any special logic for books here
+        }
+        else {
+            // TODO eventually remove this section or put some other default.
+            //test strings for now
+            //var text = "頑張り屋"
+            //var text = "大人買い" //doesn't work properly due to being tokenized as two words instead of one
+            text = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
+            //var text = "食べてる"
+            //var text = "にほんごをべんきょうする"
+        }
+
 
         //init
         initMainTextView()
@@ -53,7 +67,7 @@ class ReadingActivity : AppCompatActivity() {
         dictService = DictionaryLookupService(this)
 
         jmDictFuriHelper = JMDictFuriHelper(this)
-        //jmDictFuriHelper.createDataBase()
+        jmDictFuriHelper.createDataBase()
         jmDictFuriHelper.openDataBase()
 
 

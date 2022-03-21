@@ -4,12 +4,18 @@ import android.content.Intent
 
 import android.app.Activity
 import android.util.Log
+import com.twmeares.osusumesan.services.JMDictFuriHelper
+import com.twmeares.osusumesan.services.KnowledgeService
+import com.twmeares.osusumesan.view.InputTextActivity
 import com.twmeares.osusumesan.view.ReadingActivity
 
 
 class MainMenu() {
     private var activity: Activity? = null
     private val TAG: String = "MainMenu"
+    private lateinit var knowledgeService: KnowledgeService
+    private lateinit var jmDictFuriHelper: JMDictFuriHelper
+    private var runOnce: Boolean = true
 
 //    fun MainMenu(context: Activity?) {
 //        activity = context
@@ -17,6 +23,14 @@ class MainMenu() {
 
     constructor(context: Activity?) : this() {
         this.activity = context
+        knowledgeService = KnowledgeService.GetInstance(this.activity)
+
+        if(runOnce){
+            // TODO swtich to app startup ? see https://developer.android.com/topic/libraries/app-startup
+//            jmDictFuriHelper = JMDictFuriHelper(this.activity)
+//            jmDictFuriHelper.createDataBase()
+            runOnce = false
+        }
     }
 
     fun StartReadingList() {
@@ -39,9 +53,9 @@ class MainMenu() {
 
     fun StartInputText() {
         Log.i(TAG, "MainMenu StartInputText")
-//        val intent = Intent(activity, InputTextActivity class)
-//        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//        activity!!.startActivity(intent)
+        val intent = Intent(activity, InputTextActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        activity!!.startActivity(intent)
     }
 
     fun StartSettings() {

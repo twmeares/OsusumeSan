@@ -9,6 +9,8 @@ import android.util.Log
 import android.view.View
 import android.widget.TextView
 import com.twmeares.osusumesan.R
+import com.twmeares.osusumesan.databinding.ActivityMainMenuBinding
+import com.twmeares.osusumesan.databinding.ActivityReadingBinding
 import com.twmeares.osusumesan.models.DictionaryResult
 import com.twmeares.osusumesan.models.OsusumeSanToken
 import com.twmeares.osusumesan.models.OsusumeSanTokenizer
@@ -22,6 +24,7 @@ import com.twmeares.osusumesan.services.SysDictHelper
 import java.lang.Integer.min
 
 class ReadingActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityReadingBinding
     private lateinit var tokenizer: OsusumeSanTokenizer
     private lateinit var mainTextView: TextView
     private lateinit var jmDictFuriHelper: JMDictFuriHelper
@@ -34,7 +37,8 @@ class ReadingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_reading)
+        binding = ActivityReadingBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         //test strings for now
         //var text = "頑張り屋"
@@ -48,9 +52,8 @@ class ReadingActivity : AppCompatActivity() {
         knowledgeService = KnowledgeService.GetInstance(this)
         dictService = DictionaryLookupService(this)
 
-        jmDictFuriHelper =
-            JMDictFuriHelper(this)
-        jmDictFuriHelper.createDataBase()
+        jmDictFuriHelper = JMDictFuriHelper(this)
+        //jmDictFuriHelper.createDataBase()
         jmDictFuriHelper.openDataBase()
 
 

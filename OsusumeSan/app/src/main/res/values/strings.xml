@@ -10,7 +10,7 @@
 
     <string name="inputTextTitle">Input text to generate furigana</string>
     <string name="btnInputText">Process Text</string>
-    <string name="inputTextHint">paste your text here</string>
+    <string name="inputTextHint">input your text here</string>
 
     <string name="btnReadingList">Reading List</string>
     <string name="btnResumeReading">Resume Last Reading</string>

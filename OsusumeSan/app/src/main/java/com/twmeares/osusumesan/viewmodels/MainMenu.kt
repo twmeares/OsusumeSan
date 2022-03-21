@@ -4,7 +4,7 @@ import android.content.Intent
 
 import android.app.Activity
 import android.util.Log
-import com.twmeares.osusumesan.MainActivity
+import com.twmeares.osusumesan.ReadingActivity
 
 
 class MainMenu() {
@@ -28,7 +28,7 @@ class MainMenu() {
 
     fun StartResumeReading() {
         Log.i(TAG, "MainMenu StartResumeReading")
-        val intent = Intent(activity, MainActivity::class.java)
+        val intent = Intent(activity, ReadingActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         // TODO probably need some putExtra to tell the activity which reading task to load.
         // Might need to handle differently between switch between pages and going back to reading

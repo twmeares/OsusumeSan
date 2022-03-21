@@ -21,7 +21,7 @@ import com.twmeares.osusumesan.utils.SysDictHelper
 import com.twmeares.osusumesan.viewmodels.GlossDialog
 import java.lang.Integer.min
 
-class MainActivity : AppCompatActivity() {
+class ReadingActivity : AppCompatActivity() {
     private lateinit var tokenizer: OsusumeSanTokenizer
     private lateinit var mainTextView: TextView
     private lateinit var dbHelper: DataBaseHelper
@@ -29,12 +29,12 @@ class MainActivity : AppCompatActivity() {
     private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
     private lateinit var knowledgeService: KnowledgeService
     private lateinit var tokens: List<OsusumeSanToken>
-    private val TAG: String = "MainActivity"
+    private val TAG: String = "ReadingActivity"
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_reading)
 
         //test strings for now
         //var text = "頑張り屋"

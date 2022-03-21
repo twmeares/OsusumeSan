@@ -4,11 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import com.twmeares.osusumesan.MainActivity
-import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.databinding.ActivityMainMenuBinding
-import com.twmeares.osusumesan.models.DictionaryResult
-import com.twmeares.osusumesan.viewmodels.GlossDialog
 import com.twmeares.osusumesan.viewmodels.MainMenu
 
 class MainMenuActivity : AppCompatActivity() {

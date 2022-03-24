@@ -16,4 +16,24 @@
     <string name="btnResumeReading">Resume Last Reading</string>
     <string name="btnInputText_MenuPage">Input Text</string>
     <string name="btnSettings">Settings</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+
+    <!-- Knowledge Model Preferences -->
+    <string name="knowledge_header">Knowledge Model</string>
+    <string name="knowledge_summary">Select known levels</string>
+
+    <string name="tobira_title">Tobira</string>
+    <string name="genki1_title">Genki 1</string>
+    <string name="genki2_title">Genki 2</string>
+    <string name="n1_title">JLPT N1</string>
+    <string name="n2_title">JLPT N2</string>
+    <string name="n3_title">JLPT N3</string>
+    <string name="n4_title">JLPT N4</string>
+    <string name="n5_title">JLPT N5</string>
+
+    <!-- Display Preferences -->
+    <string name="display_header">Display Settings</string>
+    <string name="furigana_tapper_title">Furigana Tapper</string>
+    <string name="furigana_tapper_summary">Max times to display for new words</string>
 </resources>

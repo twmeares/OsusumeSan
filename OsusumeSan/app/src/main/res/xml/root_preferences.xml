@@ -1,0 +1,53 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/knowledge_header"
+        app:summary="@string/knowledge_summary">
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="genki1_preference"
+            android:title="@string/genki1_title" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="genki2_preference"
+            android:title="@string/genki2_title" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="tobira_preference"
+            android:title="@string/tobira_title" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="n1_preference"
+            android:title="@string/n1_title" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="n2_preference"
+            android:title="@string/n2_title" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="n3_preference"
+            android:title="@string/n3_title" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="n4_preference"
+            android:title="@string/n4_title" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="n5_preference"
+            android:title="@string/n5_title" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/display_header">
+        <EditTextPreference
+            android:defaultValue="1"
+            android:key="furigana_tapper_preference"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/furigana_tapper_title"
+            android:summary="@string/furigana_tapper_summary"
+            />
+    </PreferenceCategory>
+
+</PreferenceScreen>

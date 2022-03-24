@@ -8,6 +8,7 @@ import com.twmeares.osusumesan.services.JMDictFuriHelper
 import com.twmeares.osusumesan.services.KnowledgeService
 import com.twmeares.osusumesan.view.InputTextActivity
 import com.twmeares.osusumesan.view.ReadingActivity
+import com.twmeares.osusumesan.view.SettingsActivity
 
 
 class MainMenu() {
@@ -60,8 +61,8 @@ class MainMenu() {
 
     fun StartSettings() {
         Log.i(TAG, "MainMenu StartSettings")
-//        val intent = Intent(activity, SettingsActivity class)
-//        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//        activity!!.startActivity(intent)
+        val intent = Intent(activity, SettingsActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        activity!!.startActivity(intent)
     }
 }

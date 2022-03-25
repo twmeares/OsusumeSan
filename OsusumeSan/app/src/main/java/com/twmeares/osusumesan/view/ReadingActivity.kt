@@ -21,6 +21,9 @@ import com.twmeares.osusumesan.ui.RubySpan
 import com.twmeares.osusumesan.services.JMDictFuriHelper
 import com.twmeares.osusumesan.services.SysDictHelper
 import java.lang.Integer.min
+import android.content.SharedPreferences
+import androidx.preference.PreferenceManager
+
 
 class ReadingActivity : AppCompatActivity() {
     private lateinit var binding: ActivityReadingBinding
@@ -204,8 +207,13 @@ class ReadingActivity : AppCompatActivity() {
         val underline = false
         token.isFuriganaEnabled = !knowledgeService.IsKnown(dictForm, reading)
 
+        val sharedPref: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val fallbackVal = 99
+        val furiganaTapper = sharedPref.getString("furigana_tapper_preference", "99")?.toIntOrNull() ?: fallbackVal
+
         // TODO add a check to allow showing furigana only for the first n times. Can use a dict
         // and if the number is exceeded then don't do this inner section.
+        // use the above furiganaTapper pref for this.
         var furiganaLimitExceeded = false //TODO replace with the real thing.
 
         if (furiganaLimitExceeded == false) {

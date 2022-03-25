@@ -6,35 +6,35 @@
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="genki1_preference"
+            android:key="@string/genki1_key"
             android:title="@string/genki1_title" />
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="genki2_preference"
+            android:key="@string/genki2_key"
             android:title="@string/genki2_title" />
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="tobira_preference"
+            android:key="@string/tobira_key"
             android:title="@string/tobira_title" />
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="n1_preference"
+            android:key="@string/n1_key"
             android:title="@string/n1_title" />
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="n2_preference"
+            android:key="@string/n2_key"
             android:title="@string/n2_title" />
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="n3_preference"
+            android:key="@string/n3_key"
             android:title="@string/n3_title" />
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="n4_preference"
+            android:key="@string/n4_key"
             android:title="@string/n4_title" />
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="n5_preference"
+            android:key="@string/n5_key"
             android:title="@string/n5_title" />
 
     </PreferenceCategory>

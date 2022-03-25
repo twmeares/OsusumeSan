@@ -152,7 +152,6 @@ public class KnowledgeService extends SQLiteOpenHelper{
      * mark a given word as known/unknown to update knowledge model.
      */
     public void UpdateKnowledge(String word, String reading, Boolean isKnown){
-        Cursor cursor = null;
         try {
             //insert/replace to handle both new and old words.
             String query = String.format("insert or replace into knowledge (word, reading, book, jlptlvl, isknown) " +
@@ -166,17 +165,38 @@ public class KnowledgeService extends SQLiteOpenHelper{
         } catch (Exception ex){
             String msg = ex.getMessage();
             Log.e(TAG, msg);
-        } finally {
-            if (cursor != null){
-                cursor.close();
-            }
-
         }
-        // TODO what about case when the words doesn't exist in the dict.
     }
 
-    //TODO make methods for updating each of the book/jlpt level based words.
+    /*
+     * Set isKnown value for all words in the book.
+     */
+    public void UpdateKnowledgeBook(String book, Boolean isKnown){
+        try {
+            String query = String.format("update knowledge set isknown = %d " +
+                            " where book = '%s' ",
+                            (isKnown ? 1: 0), book);
+            sqliteDataBase.execSQL(query);
+        } catch (Exception ex){
+            String msg = ex.getMessage();
+            Log.e(TAG, msg);
+        }
+    }
 
+    /*
+     * Set isKnown value for all words in the JLPT level.
+     */
+    public void UpdateKnowledgeJLPT(String jlptLvl, Boolean isKnown){
+        try {
+            String query = String.format("update knowledge set isknown = %d " +
+                            " where jlptlvl = '%s' ",
+                    (isKnown ? 1: 0), jlptLvl);
+            sqliteDataBase.execSQL(query);
+        } catch (Exception ex){
+            String msg = ex.getMessage();
+            Log.e(TAG, msg);
+        }
+    }
 
     @Override
     public void onCreate(SQLiteDatabase db) {

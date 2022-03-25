@@ -24,13 +24,21 @@
     <string name="knowledge_summary">Select known levels</string>
 
     <string name="tobira_title">Tobira</string>
+    <string name="tobira_key">tobira_preference</string>
     <string name="genki1_title">Genki 1</string>
+    <string name="genki1_key">genki_1_preference</string>
     <string name="genki2_title">Genki 2</string>
+    <string name="genki2_key">genki_2_preference</string>
     <string name="n1_title">JLPT N1</string>
+    <string name="n1_key">n1_preference</string>
     <string name="n2_title">JLPT N2</string>
+    <string name="n2_key">n2_preference</string>
     <string name="n3_title">JLPT N3</string>
+    <string name="n3_key">n3_preference</string>
     <string name="n4_title">JLPT N4</string>
+    <string name="n4_key">n4_preference</string>
     <string name="n5_title">JLPT N5</string>
+    <string name="n5_key">n5_preference</string>
 
     <!-- Display Preferences -->
     <string name="display_header">Display Settings</string>

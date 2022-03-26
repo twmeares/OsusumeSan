@@ -8,6 +8,7 @@ import com.twmeares.osusumesan.services.JMDictFuriHelper
 import com.twmeares.osusumesan.services.KnowledgeService
 import com.twmeares.osusumesan.view.InputTextActivity
 import com.twmeares.osusumesan.view.ReadingActivity
+import com.twmeares.osusumesan.view.ReadingListActivity
 import com.twmeares.osusumesan.view.SettingsActivity
 
 
@@ -36,9 +37,9 @@ class MainMenu() {
 
     fun StartReadingList() {
         Log.i(TAG, "MainMenu StartReadingList")
-//        val intent = Intent(activity, ReadingListActivity class)
-//        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//        activity!!.startActivity(intent)
+        val intent = Intent(activity, ReadingListActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        activity!!.startActivity(intent)
     }
 
     fun StartResumeReading() {

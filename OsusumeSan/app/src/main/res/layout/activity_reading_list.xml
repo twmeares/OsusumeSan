@@ -3,11 +3,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical"
-        app:layoutManager="LinearLayoutManager" />
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/reading_list_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="4"
+            android:padding="8dp"
+
+            >
+
+            <TextView
+                android:id="@+id/reading_list_level"
+                android:layout_width="5dp"
+                android:layout_height="wrap_content"
+                android:text="Difficulty"
+                android:textSize="@dimen/font_size_16"
+                android:textStyle="bold"
+                android:layout_weight="1"
+                />
+            <TextView
+                android:id="@+id/reading_list_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reading_list_title"
+                android:textSize="@dimen/font_size_16"
+                android:textStyle="bold"
+                android:layout_weight="3"
+                />
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical"
+            app:layoutManager="LinearLayoutManager"
+            android:layout_below="@id/reading_list_header"/>
+    </RelativeLayout>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

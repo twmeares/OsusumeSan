@@ -44,4 +44,8 @@
     <string name="display_header">Display Settings</string>
     <string name="furigana_tapper_title">Furigana Tapper</string>
     <string name="furigana_tapper_summary">Max times to display for new words</string>
+
+    <!--    Reading list-->
+    <string name="reading_list_title">Title</string>
+    <string name="reading_list_level">Difficulty</string>
 </resources>

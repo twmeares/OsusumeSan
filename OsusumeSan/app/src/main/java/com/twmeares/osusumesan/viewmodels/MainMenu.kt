@@ -49,7 +49,7 @@ class MainMenu() {
         // TODO probably need some putExtra to tell the activity which reading task to load.
         // Might need to handle differently between switch between pages and going back to reading
         // vs when the app was completely closed and then trying to go back to the last reading.
-        //intent.putExtra("jobOffer", true)
+        //intent.putExtra("bookText", true)
         activity!!.startActivity(intent)
     }
 

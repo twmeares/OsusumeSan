@@ -17,12 +17,19 @@ class ArticleItemAdapter(
     private val dataset: List<Article>
 ) : RecyclerView.Adapter<ArticleItemAdapter.ItemViewHolder>() {
 
+    private lateinit var onItemClickListener: OnItemClickListener
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder.
     // Each data item is just an Affirmation object.
     class ItemViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
-        val textView: TextView = view.findViewById(R.id.article_item_title)
+        val titleTextView: TextView = view.findViewById(R.id.article_item_title)
+        val levelTextView: TextView = view.findViewById(R.id.article_item_level)
+        val summaryTextView: TextView = view.findViewById(R.id.article_item_summary)
+    }
+
+    fun setOnItemClickListener(onItemClickListener: OnItemClickListener) {
+        this.onItemClickListener = onItemClickListener
     }
 
     /**
@@ -41,11 +48,22 @@ class ArticleItemAdapter(
      */
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val item = dataset[position]
-        holder.textView.text = item.title
+        holder.titleTextView.text = item.title
+        holder.levelTextView.text = item.level.toString()
+        holder.summaryTextView.text = item.summary
+        holder.itemView.setOnClickListener(View.OnClickListener {
+            onItemClickListener.onItemClick(
+                position
+            )
+        })
     }
 
     /**
      * Return the size of your dataset (invoked by the layout manager)
      */
     override fun getItemCount() = dataset.size
+
+    interface OnItemClickListener {
+        fun onItemClick(position: Int)
+    }
 }

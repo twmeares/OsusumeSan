@@ -22,6 +22,7 @@ import com.twmeares.osusumesan.services.JMDictFuriHelper
 import com.twmeares.osusumesan.services.SysDictHelper
 import java.lang.Integer.min
 import android.content.SharedPreferences
+import android.text.method.LinkMovementMethod
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -165,10 +166,10 @@ class ReadingActivity : AppCompatActivity() {
         var ssb = configureText(text)
 
         mainTextView.text = ssb
-        mainTextView.setMovementMethod(MovementMethod.getInstance())
 
-        //TODO is this necessary/what does it do?
-        mainTextView.setLinksClickable(true);
+        //mainTextView.setLinksClickable(true);
+        mainTextView.setTextIsSelectable(true)
+        mainTextView.setMovementMethod(MovementMethod.getInstance())
     }
 
     // Generates clickable span that launches a GlossDialog on click.

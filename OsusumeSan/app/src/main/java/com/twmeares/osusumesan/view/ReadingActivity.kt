@@ -70,29 +70,15 @@ class ReadingActivity : AppCompatActivity() {
 
         //init
         initMainTextView()
-        knowledgeService = KnowledgeService.GetInstance(this)
-        dictService = DictionaryLookupService(this)
 
-        jmDictFuriHelper = JMDictFuriHelper(this)
-        jmDictFuriHelper.createDataBase()
-        jmDictFuriHelper.openDataBase()
-
-
-        val useSudachi = false
-        if (useSudachi){
-            var sysDictHelper =
-                SysDictHelper(this)
-            sysDictHelper.createDataBase()
-            var dict = sysDictHelper.dictionary
-            tokenizer = OsusumeSanTokenizer(dict)
-        } else {
-            tokenizer = OsusumeSanTokenizer()
+        GlobalScope.launch(Dispatchers.IO){
+            startReading()
         }
 
-        GlobalScope.launch(Dispatchers.Main){
-            displayText(text)
-        }
+    }
 
+    override fun onResume() {
+        super.onResume()
     }
 
     fun initMainTextView(){
@@ -107,6 +93,46 @@ class ReadingActivity : AppCompatActivity() {
         return text.toIntOrNull() ?: fallback
     }
 
+    // Sets up the activity for reading
+    suspend fun startReading(){
+        initialize()
+        GlobalScope.launch(Dispatchers.Main){
+            displayText(text)
+        }
+    }
+
+    // Initializes the services
+    suspend fun initialize(){
+        if(!this::knowledgeService.isInitialized){
+            knowledgeService = KnowledgeService.GetInstance(this)
+        }
+
+        if (!this::dictService.isInitialized){
+            dictService = DictionaryLookupService(this)
+        }
+
+        if (!this::jmDictFuriHelper.isInitialized){
+            jmDictFuriHelper = JMDictFuriHelper(this)
+            jmDictFuriHelper.createDataBase()
+            jmDictFuriHelper.openDataBase()
+        }
+
+
+        if (!this::tokenizer.isInitialized){
+            val useSudachi = false
+            if (useSudachi){
+                var sysDictHelper =
+                    SysDictHelper(this)
+                sysDictHelper.createDataBase()
+                var dict = sysDictHelper.dictionary
+                tokenizer = OsusumeSanTokenizer(dict)
+            } else {
+                tokenizer = OsusumeSanTokenizer()
+            }
+        }
+    }
+
+    // Genereates the furigana and clickable spans
     suspend fun configureText(text: String): SpannableStringBuilder{
         return GlobalScope.async(Dispatchers.IO) {
             val ssb = SpannableStringBuilder(text)
@@ -134,6 +160,7 @@ class ReadingActivity : AppCompatActivity() {
         }.await()
     }
 
+    // Adds the spannable text to the TextView
     suspend fun displayText(text: String){
         var ssb = configureText(text)
 
@@ -144,6 +171,7 @@ class ReadingActivity : AppCompatActivity() {
         mainTextView.setLinksClickable(true);
     }
 
+    // Generates clickable span that launches a GlossDialog on click.
     fun GenClickableSpan(token: OsusumeSanToken): ClickableSpan {
         val clickableSpan: ClickableSpan = object : ClickableSpan() {
             override fun onClick(textView: View) {

@@ -132,9 +132,9 @@ public class KnowledgeService extends SQLiteOpenHelper{
     /**
      * Check if a word is known or unkown to the user. default will be false for unknown words
      */
-    public Boolean IsKnown(String word, String reading){
-        String query = String.format("select isknown From knowledge where word = '%s' and reading = '%s'",
-                word, reading);
+    public Boolean IsKnown(String word){
+        String query = String.format("select isknown From knowledge where word = '%s'",
+                word);
         Cursor cursor = sqliteDataBase.rawQuery(query, null);
         Boolean isKnown = false;
         if(cursor.getCount()>0){
@@ -151,16 +151,16 @@ public class KnowledgeService extends SQLiteOpenHelper{
     /**
      * mark a given word as known/unknown to update knowledge model.
      */
-    public void UpdateKnowledge(String word, String reading, Boolean isKnown){
+    public void UpdateKnowledge(String word, Boolean isKnown){
         try {
             //insert/replace to handle both new and old words.
-            String query = String.format("insert or replace into knowledge (word, reading, book, jlptlvl, isknown) " +
+            String query = String.format("insert or replace into knowledge (word, book, jlptlvl, isknown) " +
                             "values ('%s', " +
                             "'%s', " +
-                            "(select book from knowledge where word = '%s' and reading = '%s'), " +
-                            "(select jlptlvl from knowledge where word = '%s' and reading = '%s'), " +
+                            "(select book from knowledge where word = '%s'), " +
+                            "(select jlptlvl from knowledge where word = '%s'), " +
                             "%d)",
-                        word, reading, word, reading, word, reading, (isKnown ? 1: 0));
+                        word, word, word, (isKnown ? 1: 0));
             sqliteDataBase.execSQL(query);
         } catch (Exception ex){
             String msg = ex.getMessage();

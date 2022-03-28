@@ -23,6 +23,10 @@ import com.twmeares.osusumesan.services.SysDictHelper
 import java.lang.Integer.min
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 
 class ReadingActivity : AppCompatActivity() {
@@ -85,7 +89,10 @@ class ReadingActivity : AppCompatActivity() {
             tokenizer = OsusumeSanTokenizer()
         }
 
-        displayText(text)
+        GlobalScope.launch(Dispatchers.Main){
+            displayText(text)
+        }
+
     }
 
     fun initMainTextView(){
@@ -100,23 +107,35 @@ class ReadingActivity : AppCompatActivity() {
         return text.toIntOrNull() ?: fallback
     }
 
-    fun displayText(text: String){
-        val ssb = SpannableStringBuilder(text)
-        tokens = tokenizer.Tokenize(text)
+    suspend fun configureText(text: String): SpannableStringBuilder{
+        return GlobalScope.async(Dispatchers.IO) {
+            val ssb = SpannableStringBuilder(text)
+            tokens = tokenizer.Tokenize(text)
 
-        tokens.forEachIndexed { tokenIdx, token ->
-            val reading = token.reading
-            val dictForm = token.dictForm
-            val basePosition = token.position
-            val totalLength = min(dictForm.length, reading.length)
-            var end = basePosition + totalLength
+            tokens.forEachIndexed { tokenIdx, token ->
+                val reading = token.reading
+                val dictForm = token.dictForm
+                val basePosition = token.position
+                val totalLength = min(dictForm.length, reading.length)
+                var end = basePosition + totalLength
 
-            AddFurigana(token, ssb)
+                AddFurigana(token, ssb)
 
-            if (token.isKanjiWord || token.isKanaWord) {
-                ssb.setSpan(GenClickableSpan(token), basePosition, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                if (token.isKanjiWord || token.isKanaWord) {
+                    ssb.setSpan(
+                        GenClickableSpan(token),
+                        basePosition,
+                        end,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
             }
-        }
+            return@async ssb
+        }.await()
+    }
+
+    suspend fun displayText(text: String){
+        var ssb = configureText(text)
 
         mainTextView.text = ssb
         mainTextView.setMovementMethod(MovementMethod.getInstance())
@@ -159,7 +178,7 @@ class ReadingActivity : AppCompatActivity() {
             tokens.forEachIndexed { tokenIdx, token ->
                 if (token.dictForm.equals(word)){
                     if (knowledgeUpdated == false){
-                        knowledgeService.UpdateKnowledge(word, token.reading, isKnown)
+                        knowledgeService.UpdateKnowledge(word, isKnown)
                         knowledgeUpdated = true
                     }
                     token.isFuriganaEnabled = enableFurigana
@@ -181,7 +200,7 @@ class ReadingActivity : AppCompatActivity() {
             tokens.forEachIndexed { tokenIdx, token ->
                 if (token.dictForm.equals(word)){
                     if (knowledgeUpdated == false){
-                        knowledgeService.UpdateKnowledge(word, token.reading, isKnown)
+                        knowledgeService.UpdateKnowledge(word, isKnown)
                         knowledgeUpdated = true
                     }
 
@@ -205,7 +224,7 @@ class ReadingActivity : AppCompatActivity() {
         var start = basePosition
         var end = basePosition + totalLength
         val underline = false
-        token.isFuriganaEnabled = !knowledgeService.IsKnown(dictForm, reading)
+        token.isFuriganaEnabled = !knowledgeService.IsKnown(dictForm)
 
         val sharedPref: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         val fallbackVal = 99

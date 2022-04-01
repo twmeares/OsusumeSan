@@ -156,7 +156,6 @@ public class KnowledgeService extends SQLiteOpenHelper{
             //insert/replace to handle both new and old words.
             String query = String.format("insert or replace into knowledge (word, book, jlptlvl, isknown) " +
                             "values ('%s', " +
-                            "'%s', " +
                             "(select book from knowledge where word = '%s'), " +
                             "(select jlptlvl from knowledge where word = '%s'), " +
                             "%d)",

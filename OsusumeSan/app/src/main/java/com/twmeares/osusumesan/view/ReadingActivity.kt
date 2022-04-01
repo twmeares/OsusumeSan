@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.text.*
 import android.text.style.ClickableSpan
 import android.util.Log
-import android.view.View
 import android.widget.TextView
 import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.databinding.ActivityReadingBinding
@@ -22,18 +21,24 @@ import com.twmeares.osusumesan.services.JMDictFuriHelper
 import com.twmeares.osusumesan.services.SysDictHelper
 import java.lang.Integer.min
 import android.content.SharedPreferences
-import android.text.method.LinkMovementMethod
+import android.view.*
+import android.view.View.OnLongClickListener
 import androidx.preference.PreferenceManager
+import com.twmeares.osusumesan.ui.CustomTextView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import android.widget.Toast
+
+import android.view.ContextMenu.ContextMenuInfo
+
 
 
 class ReadingActivity : AppCompatActivity() {
     private lateinit var binding: ActivityReadingBinding
     private lateinit var tokenizer: OsusumeSanTokenizer
-    private lateinit var mainTextView: TextView
+    private lateinit var mainTextView: CustomTextView
     private lateinit var jmDictFuriHelper: JMDictFuriHelper
     private lateinit var dictService: DictionaryLookupService
     private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
@@ -83,11 +88,44 @@ class ReadingActivity : AppCompatActivity() {
     }
 
     fun initMainTextView(){
-        mainTextView = findViewById<View>(R.id.MainTextView) as TextView
+        mainTextView = findViewById<View>(R.id.MainTextView) as CustomTextView
         mainTextView.textSize = 28f
         mainTextView.setLineSpacing(0f, 1.5f) // IMPORTANT!
         val textSize = mainTextView.textSize
         mainTextView.setPadding(0, (textSize / 2 + 5).toInt(), 0, 0)
+//dont think we need this        //registerForContextMenu(mainTextView)
+        mainTextView.customSelectionActionModeCallback = object : ActionMode.Callback {
+            override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+                //Would be nice to have a custom icon for this
+                menu.add(0, R.id.MainTextView, 0, "Search")//TODO this set icon isn't working. .setIcon(android.R.drawable.ic_menu_search) //groupId, itemId, order, title
+                menu.removeItem(android.R.id.shareText)
+                return true
+            }
+
+            override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
+                return true
+            }
+
+            override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+                if (item.title.equals("Search"))
+                {
+                    val searchSelection = mainTextView.text.substring(mainTextView.selectionStart, mainTextView.selectionEnd)
+                    Log.d(TAG, "Manual selection search started for " + searchSelection)
+                    mode.finish()
+                    // TODO search with the word = exact selection, and maybe reading as the combined readings of the selection if it spans multiple tokens?
+                    // Probably need to make sure that this doesn't show the enable/disable furi btn since that code wont work properly for this word.
+                    //dictService.Search(word, reading, isFuriganaEnabled, displayDictCallback)
+                    return true
+                }
+                return false
+            }
+
+            override fun onDestroyActionMode(mode: ActionMode) {
+
+            }
+        }
+
+
     }
 
     fun safeInt(text: String, fallback: Int): Int {
@@ -167,9 +205,33 @@ class ReadingActivity : AppCompatActivity() {
 
         mainTextView.text = ssb
 
-        //mainTextView.setLinksClickable(true);
+        mainTextView.setLinksClickable(true);
         mainTextView.setTextIsSelectable(true)
         mainTextView.setMovementMethod(MovementMethod.getInstance())
+
+        mainTextView.setOnClickListener(View.OnClickListener {
+            //Log.d(TAG, "got regular click")
+            //Log.d(TAG, "highlight start " + mainTextView.highlightStart + " end " + mainTextView.highlightEnd)
+            if (mainTextView.isHasHighlight &&
+                    (mainTextView.highlightStart != mainTextView.selectionStart
+                        || mainTextView.highlightEnd != mainTextView.selectionEnd)) {
+                /*
+                 After allowing arbitrary text selection to enable the copy/paste menu, the text
+                 selection on word click to show the gloss was broken. Seems it was getting erased.
+                 I think it's happening during an onclick event that is arriving after the ontouch
+                 was handled to trigger the gloss.
+                 So this code checks if a "highlight" was requested as part of the
+                 regular word click and reapplies it if the "highlight" (aka selection) was removed by the
+                 extra onclick after the ontouch. This is ugly, but I couldn't find any way to
+                 stop the selection from being cleared since that part isn't happening in my code.
+                 So this is the best workaround I could figure out.
+                 */
+                Selection.setSelection(mainTextView.text as Spannable, mainTextView.highlightStart, mainTextView.highlightEnd)
+                Log.d(TAG, "Selection was removed. Setting it again.")
+            }
+        })
+
+
     }
 
     // Generates clickable span that launches a GlossDialog on click.
@@ -243,6 +305,7 @@ class ReadingActivity : AppCompatActivity() {
     fun ClearTextSelection(){
         var spannable = mainTextView.text as Spannable
         Selection.removeSelection(spannable)
+        mainTextView.isHasHighlight = false
     }
 
     fun AddFurigana(token: OsusumeSanToken, ssb: Spannable){

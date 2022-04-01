@@ -11,6 +11,7 @@ import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.method.Touch;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.TextView;
 
@@ -58,6 +59,9 @@ public class MovementMethod extends LinkMovementMethod {
         // https://stackoverflow.com/questions/9274331/clickablespan-strange-behavioronclick-called-when-clicking-empty-space
         // Additional changes to support selectable text (copy/paste menu) taken from
         // https://stackoverflow.com/questions/15836306/can-a-textview-be-selectable-and-contain-links
+
+        //Log.d("MovementMethod", "movement action = " + MotionEvent.actionToString(action));
+
         if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP) {
             int x = (int) event.getX();
             int y = (int) event.getY();
@@ -120,9 +124,15 @@ public class MovementMethod extends LinkMovementMethod {
                 if (distToCenter0 > distToCenter1) {
                     if (action == MotionEvent.ACTION_UP) {
                         spans[1].onClick(widget);
-                    } else if (action == MotionEvent.ACTION_DOWN) {
                         Selection.setSelection(buffer, startSpan1, endSpan1);
+                        CustomTextView ctv = (CustomTextView) widget;
+                        ctv.setHasHighlight(true);
+                        ctv.setHighlightStart(startSpan1);
+                        ctv.setHighlightEnd(endSpan1);
                     }
+//                    else if (action == MotionEvent.ACTION_DOWN) {
+                        // Do nothing on MotionEvent.ACTION_DOWN
+//                    }
                     return true;
                 }
             }
@@ -132,9 +142,15 @@ public class MovementMethod extends LinkMovementMethod {
             int endSpan0 = buffer.getSpanEnd(spans[0]);
             if (action == MotionEvent.ACTION_UP) {
                 spans[0].onClick(widget);
-            } else if (action == MotionEvent.ACTION_DOWN) {
                 Selection.setSelection(buffer, startSpan0, endSpan0);
+                CustomTextView ctv = (CustomTextView) widget;
+                ctv.setHasHighlight(true);
+                ctv.setHighlightStart(startSpan0);
+                ctv.setHighlightEnd(endSpan0);
             }
+//            else if (action == MotionEvent.ACTION_DOWN) {
+                // Do nothing on MotionEvent.ACTION_DOWN
+//            }
             return true;
 
         }

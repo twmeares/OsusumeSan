@@ -41,7 +41,7 @@ class ReadingActivity : AppCompatActivity() {
     private lateinit var knowledgeService: KnowledgeService
     private lateinit var tokens: List<OsusumeSanToken>
     private val TAG: String = "ReadingActivity"
-    private lateinit var text: String
+    private lateinit var curPageText: String
     private lateinit var fullText: String //full article text without any pagination
     private lateinit var article: Article
     private var currentPageNum: Int = 0
@@ -60,15 +60,16 @@ class ReadingActivity : AppCompatActivity() {
         //val bookText = intent.getStringExtra("bookText")
         val inputArticle: Article? = intent.getSerializableExtra("article") as? Article
         if(inputText != null){
-            text = inputText.toString()
-            Log.i(TAG, "Received input text " + text)
+            fullText = inputText.toString()
+            Log.i(TAG, "Received input text " + curPageText)
+            getOnePageOfText(1)
             GlobalScope.launch(Dispatchers.IO){
                 startReading()
             }
         } else if (inputArticle != null){
             // fetch the book data
             article = inputArticle
-            text = "Fetching text from Aozora Bunko."
+            curPageText = "Fetching text from Aozora Bunko."
             aozoraService = AozoraService(this)
             aozoraService.FetchArticle(article, aozoraArticleCallback)
             GlobalScope.launch(Dispatchers.IO){
@@ -80,10 +81,12 @@ class ReadingActivity : AppCompatActivity() {
             //test strings for now
             //var text = "頑張り屋"
             //var text = "大人買い" //doesn't work properly due to being tokenized as two words instead of one
-            //text = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
+            fullText = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
             //var text = "食べてる"
             //var text = "にほんごをべんきょうする"
-            text = "憚る" //"憚かる"
+            //text = "憚る" //"憚かる" // this word isn't recognized in kuromoji but is in sudachi
+
+            getOnePageOfText(1)
             GlobalScope.launch(Dispatchers.IO){
                 startReading()
             }
@@ -172,7 +175,7 @@ class ReadingActivity : AppCompatActivity() {
     suspend fun startReading(){
         initialize()
         GlobalScope.launch(Dispatchers.Main){
-            displayText(text)
+            displayText(curPageText)
         }
     }
 
@@ -423,7 +426,7 @@ class ReadingActivity : AppCompatActivity() {
 
         if (textLayout.lineCount <= mainTextView.maxLines){
             // all fits on one page
-            text = fullText
+            curPageText = fullText
             isTextMultiPage = false
             //TODO disable the prev/next buttons if only one page of text in total
             return true
@@ -441,7 +444,7 @@ class ReadingActivity : AppCompatActivity() {
             val startPos = textLayout.getLineStart(startLineNum)
             val endPos = textLayout.getLineEnd(endLineNum)
             // Account for any characters that got cut off from the previous page.
-            text = fullText.substring(startPos - lastLineCutCharNum, endPos)
+            curPageText = fullText.substring(startPos - lastLineCutCharNum, endPos)
             currentPageNum = pageNum
             return true
         }
@@ -452,7 +455,7 @@ class ReadingActivity : AppCompatActivity() {
         binding.btnNext.setOnClickListener {
             if (getOnePageOfText(currentPageNum + 1)) {
                 GlobalScope.launch(Dispatchers.Main){
-                    displayText(text)
+                    displayText(curPageText)
                 }
             }
         }
@@ -460,7 +463,7 @@ class ReadingActivity : AppCompatActivity() {
         binding.btnPrev.setOnClickListener {
             if(getOnePageOfText(currentPageNum - 1)){
                 GlobalScope.launch(Dispatchers.Main){
-                    displayText(text)
+                    displayText(curPageText)
                 }
             }
         }

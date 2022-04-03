@@ -6,23 +6,16 @@ import android.os.Bundle
 import android.text.*
 import android.text.style.ClickableSpan
 import android.util.Log
-import android.widget.TextView
 import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.databinding.ActivityReadingBinding
 import com.twmeares.osusumesan.models.DictionaryResult
 import com.twmeares.osusumesan.models.OsusumeSanToken
 import com.twmeares.osusumesan.models.OsusumeSanTokenizer
-import com.twmeares.osusumesan.services.DictionaryLookupService
-import com.twmeares.osusumesan.services.KnowledgeService
-import com.twmeares.osusumesan.services.iDictionaryLookupService
 import com.twmeares.osusumesan.ui.MovementMethod
 import com.twmeares.osusumesan.ui.RubySpan
-import com.twmeares.osusumesan.services.JMDictFuriHelper
-import com.twmeares.osusumesan.services.SysDictHelper
 import java.lang.Integer.min
 import android.content.SharedPreferences
 import android.view.*
-import android.view.View.OnLongClickListener
 import androidx.preference.PreferenceManager
 import com.twmeares.osusumesan.ui.CustomTextView
 import kotlinx.coroutines.Dispatchers
@@ -31,8 +24,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import android.widget.Toast
 
-import android.view.ContextMenu.ContextMenuInfo
-
+import com.twmeares.osusumesan.models.Article
+import com.twmeares.osusumesan.services.*
 
 
 class ReadingActivity : AppCompatActivity() {
@@ -41,11 +34,16 @@ class ReadingActivity : AppCompatActivity() {
     private lateinit var mainTextView: CustomTextView
     private lateinit var jmDictFuriHelper: JMDictFuriHelper
     private lateinit var dictService: DictionaryLookupService
+    private lateinit var aozoraService: AozoraService
     private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
+    private val aozoraArticleCallback = AozoraService.Callback(::LoadAozoraResult)
     private lateinit var knowledgeService: KnowledgeService
     private lateinit var tokens: List<OsusumeSanToken>
     private val TAG: String = "ReadingActivity"
     private lateinit var text: String
+    private lateinit var fullText: String //full article text without any pagination
+    private lateinit var article: Article
+    private var currentPageNum: Int = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,15 +51,26 @@ class ReadingActivity : AppCompatActivity() {
         binding = ActivityReadingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // TODO maybe add another getExtra for text title to be abel to query the text from db or
-        // if it's feasible just pass the full text here. See stub below
+        initMainTextView()
+
         val inputText = intent.getStringExtra("inputText")
-        val bookText = intent.getStringExtra("bookText")
+        //val bookText = intent.getStringExtra("bookText")
+        val inputArticle: Article? = intent.getSerializableExtra("article") as? Article
         if(inputText != null){
             text = inputText.toString()
             Log.i(TAG, "Received input text " + text)
-        } else if (bookText != null){
-            // Stub. Do any special logic for books here
+            GlobalScope.launch(Dispatchers.IO){
+                startReading()
+            }
+        } else if (inputArticle != null){
+            // fetch the book data
+            article = inputArticle
+            text = "Fetching text from Aozora Bunko."
+            aozoraService = AozoraService(this)
+            aozoraService.FetchArticle(article, aozoraArticleCallback)
+            GlobalScope.launch(Dispatchers.IO){
+                initialize()
+            }
         }
         else {
             // TODO eventually remove this section or put some other default.
@@ -71,15 +80,13 @@ class ReadingActivity : AppCompatActivity() {
             text = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
             //var text = "食べてる"
             //var text = "にほんごをべんきょうする"
+            GlobalScope.launch(Dispatchers.IO){
+                startReading()
+            }
         }
 
+        setupClickListeners()
 
-        //init
-        initMainTextView()
-
-        GlobalScope.launch(Dispatchers.IO){
-            startReading()
-        }
 
     }
 
@@ -125,7 +132,32 @@ class ReadingActivity : AppCompatActivity() {
             }
         }
 
+        mainTextView.setLinksClickable(true);
+        mainTextView.setTextIsSelectable(true)
+        mainTextView.setMovementMethod(MovementMethod.getInstance())
 
+
+        mainTextView.setOnClickListener(View.OnClickListener {
+            //Log.d(TAG, "got regular click")
+            //Log.d(TAG, "highlight start " + mainTextView.highlightStart + " end " + mainTextView.highlightEnd)
+            if (mainTextView.isHasHighlight &&
+                (mainTextView.highlightStart != mainTextView.selectionStart
+                        || mainTextView.highlightEnd != mainTextView.selectionEnd)) {
+                /*
+                 After allowing arbitrary text selection to enable the copy/paste menu, the text
+                 selection on word click to show the gloss was broken. Seems it was getting erased.
+                 I think it's happening during an onclick event that is arriving after the ontouch
+                 was handled to trigger the gloss.
+                 So this code checks if a "highlight" was requested as part of the
+                 regular word click and reapplies it if the "highlight" (aka selection) was removed by the
+                 extra onclick after the ontouch. This is ugly, but I couldn't find any way to
+                 stop the selection from being cleared since that part isn't happening in my code.
+                 So this is the best workaround I could figure out.
+                 */
+                Selection.setSelection(mainTextView.text as Spannable, mainTextView.highlightStart, mainTextView.highlightEnd)
+                Log.d(TAG, "Selection was removed. Setting it again.")
+            }
+        })
     }
 
     fun safeInt(text: String, fallback: Int): Int {
@@ -202,36 +234,7 @@ class ReadingActivity : AppCompatActivity() {
     // Adds the spannable text to the TextView
     suspend fun displayText(text: String){
         var ssb = configureText(text)
-
         mainTextView.text = ssb
-
-        mainTextView.setLinksClickable(true);
-        mainTextView.setTextIsSelectable(true)
-        mainTextView.setMovementMethod(MovementMethod.getInstance())
-
-        mainTextView.setOnClickListener(View.OnClickListener {
-            //Log.d(TAG, "got regular click")
-            //Log.d(TAG, "highlight start " + mainTextView.highlightStart + " end " + mainTextView.highlightEnd)
-            if (mainTextView.isHasHighlight &&
-                    (mainTextView.highlightStart != mainTextView.selectionStart
-                        || mainTextView.highlightEnd != mainTextView.selectionEnd)) {
-                /*
-                 After allowing arbitrary text selection to enable the copy/paste menu, the text
-                 selection on word click to show the gloss was broken. Seems it was getting erased.
-                 I think it's happening during an onclick event that is arriving after the ontouch
-                 was handled to trigger the gloss.
-                 So this code checks if a "highlight" was requested as part of the
-                 regular word click and reapplies it if the "highlight" (aka selection) was removed by the
-                 extra onclick after the ontouch. This is ugly, but I couldn't find any way to
-                 stop the selection from being cleared since that part isn't happening in my code.
-                 So this is the best workaround I could figure out.
-                 */
-                Selection.setSelection(mainTextView.text as Spannable, mainTextView.highlightStart, mainTextView.highlightEnd)
-                Log.d(TAG, "Selection was removed. Setting it again.")
-            }
-        })
-
-
     }
 
     // Generates clickable span that launches a GlossDialog on click.
@@ -370,4 +373,75 @@ class ReadingActivity : AppCompatActivity() {
             }
         }
     }
+
+    fun LoadAozoraResult(result: Article){
+        article = result
+
+        // Limit the amount to show for now.
+        GlobalScope.launch(Dispatchers.IO){
+            //displayText(result.text.substring(0, 200))
+            fullText = result.text
+            getOnePageOfText(1)
+            startReading()
+        }
+    }
+
+    fun getOnePageOfText(pageNum: Int): Boolean{
+        if (pageNum < 1){
+            val msg = "Already on first page."
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+            return false
+        }
+
+        val textLayout = StaticLayout(
+            fullText,
+            mainTextView.paint,
+            mainTextView.measuredWidth - mainTextView.paddingLeft - mainTextView.paddingRight,
+            Layout.Alignment.ALIGN_NORMAL,
+            mainTextView.lineSpacingMultiplier,
+            mainTextView.lineSpacingExtra,
+            mainTextView.includeFontPadding
+        )
+        if (textLayout.lineCount <= mainTextView.maxLines){
+            // all fits on one page
+            text = fullText
+            //TODO disable the prev/next buttons if only one page of text in total
+            return true
+        } else {
+            // just grab maxLines worth of text offset by the pageNum
+            val lastLineIdx = textLayout.lineCount - 1
+            val startLineNum = mainTextView.maxLines * (pageNum - 1)
+            if (startLineNum > lastLineIdx) {
+                val msg = "Already on last page."
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                return false
+            }
+            val endLineNum = Math.min((mainTextView.maxLines - 1) * pageNum, lastLineIdx)
+            val startPos = textLayout.getLineStart(startLineNum)
+            val endPos = textLayout.getLineEnd(endLineNum)
+            text = fullText.substring(startPos, endPos)
+            currentPageNum = pageNum
+            return true
+        }
+
+    }
+
+    private fun setupClickListeners() {
+        binding.btnNext.setOnClickListener {
+            if (getOnePageOfText(currentPageNum + 1)) {
+                GlobalScope.launch(Dispatchers.Main){
+                    displayText(text)
+                }
+            }
+        }
+
+        binding.btnPrev.setOnClickListener {
+            if(getOnePageOfText(currentPageNum - 1)){
+                GlobalScope.launch(Dispatchers.Main){
+                    displayText(text)
+                }
+            }
+        }
+    }
+
 }

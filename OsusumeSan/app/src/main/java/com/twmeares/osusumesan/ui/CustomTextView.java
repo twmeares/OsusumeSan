@@ -92,4 +92,17 @@ public class CustomTextView extends TextView
         this.hasHighlight = hasHighlight;
     }
 
+
+    @Override
+    public void scrollTo(int x, int y) {
+        // Disable scrolling. Aka do nothing here
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        double topPadding = this.getPaddingTop();
+        int maxLines = (int)(this.getHeight() - topPadding)/this.getLineHeight() - 1; //minus one to avoid half cutoff rows
+        this.setMaxLines(maxLines);
+    }
 }

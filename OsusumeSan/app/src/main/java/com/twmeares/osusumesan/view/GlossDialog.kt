@@ -123,8 +123,6 @@ class GlossDialog : DialogFragment() {
         }
 
         binding.btnFurigana.setOnClickListener {
-            // TODO: Do some task here
-            // TODO pass the value of isFuriganaEnabled to whatever method gets added here.
             val activity : ReadingActivity? = getActivity() as? ReadingActivity
             if(activity != null){
                 activity.UpdateFurigana(dictResult.dictForm, !dictResult.isFuriganaEnabled)

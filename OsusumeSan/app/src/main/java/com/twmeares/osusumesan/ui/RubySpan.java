@@ -129,6 +129,10 @@ public final class RubySpan extends ReplacementSpan {
         return spaceLeft;
     }
 
+    public boolean isEnoughSpaceLeft() {
+        return enoughSpaceLeft;
+    }
+
     private void measureRun(Paint paint, CharSequence text, int start, int end) {
 
         final int textLength = end - start;
@@ -247,6 +251,9 @@ public final class RubySpan extends ReplacementSpan {
         canvas.getClipBounds(bounds);  // canvas.left is 0
 
         spaceLeft = bounds.right - x - measureSize;
+
+
+        //String currentText = text.toString().substring(start, end); // helpful for debugging.
 
         // Translate the canvas to avoid overlapping with previous RubySpan.
         if (x + offsetX >= bounds.left && consecutiveRuby && enoughSpaceLeft) {

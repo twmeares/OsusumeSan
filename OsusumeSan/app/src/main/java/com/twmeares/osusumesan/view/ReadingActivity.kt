@@ -26,6 +26,7 @@ import android.widget.Toast
 
 import com.twmeares.osusumesan.models.Article
 import com.twmeares.osusumesan.services.*
+import android.text.StaticLayout
 
 
 class ReadingActivity : AppCompatActivity() {
@@ -44,6 +45,8 @@ class ReadingActivity : AppCompatActivity() {
     private lateinit var fullText: String //full article text without any pagination
     private lateinit var article: Article
     private var currentPageNum: Int = 0
+    private var isTextMultiPage: Boolean = false
+    private var lastLineCutCharNum: Int = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,9 +80,10 @@ class ReadingActivity : AppCompatActivity() {
             //test strings for now
             //var text = "頑張り屋"
             //var text = "大人買い" //doesn't work properly due to being tokenized as two words instead of one
-            text = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
+            //text = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
             //var text = "食べてる"
             //var text = "にほんごをべんきょうする"
+            text = "憚る" //"憚かる"
             GlobalScope.launch(Dispatchers.IO){
                 startReading()
             }
@@ -216,6 +220,7 @@ class ReadingActivity : AppCompatActivity() {
                 val totalLength = min(dictForm.length, reading.length)
                 var end = basePosition + totalLength
 
+
                 AddFurigana(token, ssb)
 
                 if (token.isKanjiWord || token.isKanaWord) {
@@ -227,6 +232,22 @@ class ReadingActivity : AppCompatActivity() {
                     )
                 }
             }
+
+            //check if the last word will get cut off
+            if (isTextMultiPage == true){
+                val sb = StaticLayout.Builder.obtain(ssb, 0, ssb.length, mainTextView.paint,
+                    mainTextView.measuredWidth - mainTextView.paddingLeft - mainTextView.paddingRight)
+                    .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                    .setLineSpacing(mainTextView.lineSpacingExtra, mainTextView.lineSpacingMultiplier)
+                    .setIncludePad(mainTextView.includeFontPadding)
+                val layoutWithSpans = sb.build()
+
+                val lastPos = layoutWithSpans.getLineEnd(Math.min(mainTextView.maxLines, layoutWithSpans.lineCount-1))
+                // Check if the text will "actually" fit the screen and if there is any difference
+                // between the length we tried to fit and the length that will actually fit.
+                lastLineCutCharNum = ssb.length - lastPos
+            }
+
             return@async ssb
         }.await()
     }
@@ -393,22 +414,22 @@ class ReadingActivity : AppCompatActivity() {
             return false
         }
 
-        val textLayout = StaticLayout(
-            fullText,
-            mainTextView.paint,
-            mainTextView.measuredWidth - mainTextView.paddingLeft - mainTextView.paddingRight,
-            Layout.Alignment.ALIGN_NORMAL,
-            mainTextView.lineSpacingMultiplier,
-            mainTextView.lineSpacingExtra,
-            mainTextView.includeFontPadding
-        )
+        val sb = StaticLayout.Builder.obtain(fullText, 0, fullText.length, mainTextView.paint,
+            mainTextView.measuredWidth - mainTextView.paddingLeft - mainTextView.paddingRight)
+            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+            .setLineSpacing(mainTextView.lineSpacingExtra, mainTextView.lineSpacingMultiplier)
+            .setIncludePad(mainTextView.includeFontPadding)
+        val textLayout = sb.build()
+
         if (textLayout.lineCount <= mainTextView.maxLines){
             // all fits on one page
             text = fullText
+            isTextMultiPage = false
             //TODO disable the prev/next buttons if only one page of text in total
             return true
         } else {
             // just grab maxLines worth of text offset by the pageNum
+            isTextMultiPage = true
             val lastLineIdx = textLayout.lineCount - 1
             val startLineNum = mainTextView.maxLines * (pageNum - 1)
             if (startLineNum > lastLineIdx) {
@@ -416,10 +437,11 @@ class ReadingActivity : AppCompatActivity() {
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
                 return false
             }
-            val endLineNum = Math.min((mainTextView.maxLines - 1) * pageNum, lastLineIdx)
+            val endLineNum = Math.min((mainTextView.maxLines * pageNum) - 1, lastLineIdx)
             val startPos = textLayout.getLineStart(startLineNum)
             val endPos = textLayout.getLineEnd(endLineNum)
-            text = fullText.substring(startPos, endPos)
+            // Account for any characters that got cut off from the previous page.
+            text = fullText.substring(startPos - lastLineCutCharNum, endPos)
             currentPageNum = pageNum
             return true
         }

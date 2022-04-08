@@ -62,9 +62,9 @@ class ReadingActivity : AppCompatActivity() {
         if(inputText != null){
             fullText = inputText.toString()
             Log.i(TAG, "Received input text " + curPageText)
-            getOnePageOfText(1)
+            //getOnePageOfText(1)
             GlobalScope.launch(Dispatchers.IO){
-                startReading()
+                startReading(1)
             }
         } else if (inputArticle != null){
             // fetch the book data
@@ -82,13 +82,17 @@ class ReadingActivity : AppCompatActivity() {
             //var text = "頑張り屋"
             //var text = "大人買い" //doesn't work properly due to being tokenized as two words instead of one
             fullText = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
+            //fullText = "たくさん"
+            //fullText = "べんきょう"
+            //fullText = "花見"
+            //fullText = "花粉"
             //var text = "食べてる"
             //var text = "にほんごをべんきょうする"
             //text = "憚る" //"憚かる" // this word isn't recognized in kuromoji but is in sudachi
 
-            getOnePageOfText(1)
+            //getOnePageOfText(1)
             GlobalScope.launch(Dispatchers.IO){
-                startReading()
+                startReading(1)
             }
         }
 
@@ -106,7 +110,15 @@ class ReadingActivity : AppCompatActivity() {
         mainTextView.textSize = 28f
         mainTextView.setLineSpacing(0f, 1.5f) // IMPORTANT!
         val textSize = mainTextView.textSize
-        mainTextView.setPadding(0, (textSize / 2 + 5).toInt(), 0, 0)
+        //val tenDp = (25 * getResources().getDisplayMetrics().density).toInt()
+        val pad = (textSize / 2 + 5).toInt()
+        mainTextView.setPadding(pad, (textSize / 2 + 5).toInt(), pad, 0)
+        //mainTextView.setPadding(0, (textSize / 2 + 5).toInt(), 0, 0)
+
+        // Setting a transparent shadow is one work around to text getting chopped off.
+        // But it is said to have bad impact on performance.
+        mainTextView.setShadowLayer(mainTextView.textSize/2, 0f, 0f, Color.TRANSPARENT)
+
 //dont think we need this        //registerForContextMenu(mainTextView)
         mainTextView.customSelectionActionModeCallback = object : ActionMode.Callback {
             override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
@@ -172,9 +184,10 @@ class ReadingActivity : AppCompatActivity() {
     }
 
     // Sets up the activity for reading
-    suspend fun startReading(){
+    suspend fun startReading(pageNum: Int){
         initialize()
         GlobalScope.launch(Dispatchers.Main){
+            getOnePageOfText(pageNum)
             displayText(curPageText)
         }
     }
@@ -245,7 +258,7 @@ class ReadingActivity : AppCompatActivity() {
                     .setIncludePad(mainTextView.includeFontPadding)
                 val layoutWithSpans = sb.build()
 
-                val lastPos = layoutWithSpans.getLineEnd(Math.min(mainTextView.maxLines, layoutWithSpans.lineCount-1))
+                val lastPos = layoutWithSpans.getLineEnd(Math.min(mainTextView.maxLines - 1, layoutWithSpans.lineCount-1))
                 // Check if the text will "actually" fit the screen and if there is any difference
                 // between the length we tried to fit and the length that will actually fit.
                 lastLineCutCharNum = ssb.length - lastPos
@@ -405,8 +418,8 @@ class ReadingActivity : AppCompatActivity() {
         GlobalScope.launch(Dispatchers.IO){
             //displayText(result.text.substring(0, 200))
             fullText = result.text
-            getOnePageOfText(1)
-            startReading()
+            //getOnePageOfText(1)
+            startReading(1)
         }
     }
 
@@ -414,6 +427,16 @@ class ReadingActivity : AppCompatActivity() {
         if (pageNum < 1){
             val msg = "Already on first page."
             Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+            return false
+        }
+
+        if (mainTextView.measuredWidth == 0) {
+            // Somehow we got to measuring the width before the textView was drawn.
+            // Manually calling measure screws up the text display and half of the screen
+            // shows as blank. Need a better way of dealing with this.
+            // Check out https://stackoverflow.com/questions/24430429/getmeasuredheight-and-getmeasuredwidth-returns-0-after-view-measure
+            curPageText = "problem loading the text. Please retry."
+            Log.e(TAG, "Reached getOnePageOfText before the textView width was set.")
             return false
         }
 

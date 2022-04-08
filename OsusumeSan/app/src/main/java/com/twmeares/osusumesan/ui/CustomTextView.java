@@ -3,7 +3,7 @@ package com.twmeares.osusumesan.ui;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.Intent;
+import android.graphics.Canvas;
 import android.os.Build;
 import android.text.Selection;
 import android.text.Spannable;
@@ -57,13 +57,6 @@ public class CustomTextView extends TextView
     protected void onSelectionChanged(int selStart, int selEnd) {
         Log.d(TAG, "selStart " + selStart + " selEnd " + selEnd + " has focus " + hasFocus());
         super.onSelectionChanged(selStart, selEnd);
-//        if (this.hasHighlight && this.highlightStart != this.getSelectionStart()
-//                && this.highlightEnd != this.getSelectionEnd()) {
-//            Selection.setSelection((Spannable)this.getText(), this.highlightStart, this.highlightEnd);
-//            //this.isHasHighlight = false
-//            Log.d("Custom text view", "Setting the highlight again.");
-//        }
-
     }
 
 
@@ -104,5 +97,26 @@ public class CustomTextView extends TextView
         double topPadding = this.getPaddingTop();
         int maxLines = (int)(this.getHeight() - topPadding)/this.getLineHeight() - 1; //minus one to avoid half cutoff rows
         this.setMaxLines(maxLines);
+        //int lastPos = this.getLayout().getLineEnd(Math.min(this.getMaxLines() - 1, this.getLayout().getLineCount()-1));
     }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+    }
+
+//    @Override
+//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+//        // Try for a width based on our minimum
+//        int minw = getPaddingLeft() + getPaddingRight() + getSuggestedMinimumWidth();
+//        int w = resolveSizeAndState(minw, widthMeasureSpec, 1);
+//
+//        // Whatever the width ends up being, ask for a height that would let the pie
+//        // get as big as it can
+//        int minh = getSuggestedMinimumHeight() + getPaddingBottom() + getPaddingTop();
+//        int h = resolveSizeAndState(minh, heightMeasureSpec, 0);
+//
+//        setMeasuredDimension(w, h);
+//    }
+
 }

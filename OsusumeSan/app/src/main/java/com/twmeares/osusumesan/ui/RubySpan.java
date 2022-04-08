@@ -21,6 +21,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.text.Spanned;
 import android.text.style.ReplacementSpan;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -133,8 +134,7 @@ public final class RubySpan extends ReplacementSpan {
         return enoughSpaceLeft;
     }
 
-    private void measureRun(Paint paint, CharSequence text, int start, int end) {
-
+    public float measureSelf(Paint paint, int start, int end) {
         final int textLength = end - start;
         rubyLength = ruby.length();
         fontSize = paint.getTextSize();
@@ -170,9 +170,16 @@ public final class RubySpan extends ReplacementSpan {
 
         offsetX = (newTextWidth - newRubyWidth) / 2;
 
+        return newTextWidth;
+    }
+
+    private void measureRun(Paint paint, CharSequence text, int start, int end) {
+        measureSelf(paint, start, end);
         // FIXME If the ruby is too long, it will exceed the right border
         // and becomes partially invisible.
         measureSize = newTextWidth;
+
+        //String currentText = text.toString().substring(start, end); // helpful for debugging.
 
         Object[] objs = ((Spanned)text).getSpans(0, start, this.getClass());
         int len = objs.length;
@@ -196,14 +203,40 @@ public final class RubySpan extends ReplacementSpan {
 
             // FIXME buggy
             float spaceLeft = prevRubySpan.getSpaceLeft();
-            if (spaceLeft > measureSize + extraSkip) {
-                enoughSpaceLeft = true;
-                // FIXME
-                measureSize += extraSkip;
-            } else {
-                // FIXME In this case, does the text automatically goes to the next line?
-                enoughSpaceLeft = false;
+            //Log.d("rubyspan", "measure = " + currentText + " start " + start + " end " + end + " measureSize " + measureSize + " spaceleft " + spaceLeft);
+            if (spaceLeft != 0.0) {
+                if (spaceLeft > measureSize + extraSkip) {
+                    enoughSpaceLeft = true;
+                    // FIXME
+                    measureSize += extraSkip;
+                } else {
+                    // FIXME In this case, does the text automatically goes to the next line?
+                    enoughSpaceLeft = false;
+                }
+
+// This was an attempt to fix the spans getting chopped at the end of the line issue. It didn't work.
+// It causes some jumbling on the beginning of lines occasionally.
+//                float spaceAfterThis = spaceLeft - measureSize;
+//                if (spaceAfterThis < fontSize * 1){
+//                    //if there's less space than a single character then take the remaining space
+//                    measureSize += spaceAfterThis - 10;
+//                }
+                //come back to this. Trying an easier thing above for now.
+//            // prelook step. Idea was to request a large measureSize for idx n if the remaining space
+              // wouldn't have been enough for idx n+1 that way n+1 would be forced to the next line.
+              // Android doesn't seem to behave that way though :(
+//            objs = ((Spanned)text).getSpans(end, text.length(), this.getClass());
+//            len = objs.length;
+//            if (len > 0 && ((Spanned)text).getSpanStart(objs[0]) == end) {
+//                final RubySpan nextRubySpan = (RubySpan)objs[0];
+//                float nextRubyWidth = nextRubySpan.measureSelf(paint, ((Spanned)text).getSpanStart(nextRubySpan), ((Spanned)text).getSpanStart(nextRubySpan));
+//                if (spaceAfterThis < nextRubyWidth){
+//                    //if there's less space than a single character then take the remaining space
+//                    measureSize += spaceAfterThis - 10;
+//                }
+//            }
             }
+
         } else {
             consecutiveRuby = false;
             enoughSpaceLeft = false;
@@ -228,6 +261,8 @@ public final class RubySpan extends ReplacementSpan {
             return;
         }
 
+//        String currentText = text.toString().substring(start, end); // helpful for debugging.
+//        Log.d("draw ruby", "draw = " + currentText + " start " + start + " end " + end + " measureSize " + measureSize + " spaceleft " + spaceLeft);
         // getSize() always runs before this method. There's no need to measure again.
         //measureRun(paint, text, start, end);
 
@@ -251,9 +286,6 @@ public final class RubySpan extends ReplacementSpan {
         canvas.getClipBounds(bounds);  // canvas.left is 0
 
         spaceLeft = bounds.right - x - measureSize;
-
-
-        //String currentText = text.toString().substring(start, end); // helpful for debugging.
 
         // Translate the canvas to avoid overlapping with previous RubySpan.
         if (x + offsetX >= bounds.left && consecutiveRuby && enoughSpaceLeft) {

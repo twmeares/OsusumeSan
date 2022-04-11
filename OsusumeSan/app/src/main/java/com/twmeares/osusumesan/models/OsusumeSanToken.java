@@ -12,6 +12,8 @@ public class OsusumeSanToken {
     private Token token;
     private Morpheme morph;
     private String reading;
+    private String literal;
+    private String dictForm;
     private Boolean useSudachi = false;
     private Boolean isFuriganaEnabled = true;
     // Reference for unicode blocks: https://stackoverflow.com/questions/43418812/check-whether-a-string-contains-japanese-chinese-characters
@@ -33,40 +35,25 @@ public class OsusumeSanToken {
     }
 
     public Boolean getIsKanjiWord() {
-        if (useSudachi){
-            return morph.dictionaryForm().matches(REGEX_KANJI);
-        } else {
-            return token.getBaseForm().matches(REGEX_KANJI);
-        }
-        //return !isKatakana(token.getBaseForm()) && !isHiragana(token.getBaseForm());
+        return dictForm.matches(REGEX_KANJI);
     }
 
     public Boolean getIsKanaWord() {
-        if (useSudachi) {
-            return isKatakana(morph.dictionaryForm()) || isHiragana(morph.dictionaryForm());
-        } else {
-            return isKatakana(token.getBaseForm()) || isHiragana(token.getBaseForm());
-        }
+        return isKatakana(dictForm) || isHiragana(dictForm);
     }
 
     public Boolean getIsHiraganaWord() {
-        if (useSudachi) {
-            return isHiragana(morph.dictionaryForm());
-        } else {
-            return isHiragana(token.getBaseForm());
-        }
+        return isHiragana(dictForm);
     }
 
     public String getReading(){
         return reading;
     }
 
-    public String getDictForm() {
-        if (useSudachi){
-            return morph.dictionaryForm();
-        } else {
-            return token.getBaseForm();
-        }
+    public String getDictForm() { return dictForm; }
+
+    public String getLiteral() {
+        return literal;
     }
 
     public int getPosition() {
@@ -88,8 +75,25 @@ public class OsusumeSanToken {
     private void ConfigureToken(){
         if (useSudachi){
             reading = morph.readingForm();
+            dictForm = morph.dictionaryForm();
+            literal = morph.surface();
         } else {
             reading = token.getReading();
+            dictForm = token.getBaseForm();
+            literal = token.getSurface();
+        }
+
+        // If literal is hiragana/katakana while reading/dictForm are * it means the token wasn't
+        // found in sudachi/kuromoji. Override them with the literal's value
+        if (useSudachi && reading.equals("") && (isKatakana(literal) || isHiragana(literal))) {
+            // Sudachi uses reading = "" to represent this case.
+            reading = literal;
+            dictForm = literal;
+        }
+        else if (reading.equals("*") && dictForm.equals("*") && (isKatakana(literal) || isHiragana(literal)) ) {
+            // Kuromoji uses "*" to represent this case.
+            reading = literal;
+            dictForm = literal;
         }
 
         if (getIsKanjiWord() || getIsHiraganaWord()){

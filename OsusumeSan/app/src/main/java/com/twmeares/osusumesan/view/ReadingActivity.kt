@@ -466,8 +466,13 @@ class ReadingActivity : AppCompatActivity() {
             val endLineNum = Math.min((mainTextView.maxLines * pageNum) - 1, lastLineIdx)
             val startPos = textLayout.getLineStart(startLineNum)
             val endPos = textLayout.getLineEnd(endLineNum)
+            var startOffset = startPos
             // Account for any characters that got cut off from the previous page.
-            curPageText = fullText.substring(startPos - lastLineCutCharNum, endPos)
+            if (pageNum > currentPageNum) {
+                startOffset - lastLineCutCharNum
+                startOffset = Math.max(0, startOffset) //don't allow negative.
+            }
+            curPageText = fullText.substring(startOffset, endPos)
             currentPageNum = pageNum
             return true
         }

@@ -14,6 +14,7 @@ public class OsusumeSanToken {
     private String reading;
     private Boolean useSudachi = false;
     private Boolean isFuriganaEnabled = true;
+    // Reference for unicode blocks: https://stackoverflow.com/questions/43418812/check-whether-a-string-contains-japanese-chinese-characters
     private static String REGEX_KANJI = ".*[\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff].*";
 
     OsusumeSanToken(Token token){

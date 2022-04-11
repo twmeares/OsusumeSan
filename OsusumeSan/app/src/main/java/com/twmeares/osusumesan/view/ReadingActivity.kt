@@ -61,7 +61,7 @@ class ReadingActivity : AppCompatActivity() {
         val inputArticle: Article? = intent.getSerializableExtra("article") as? Article
         if(inputText != null){
             fullText = inputText.toString()
-            Log.i(TAG, "Received input text " + curPageText)
+            Log.i(TAG, "Received input text of length " + fullText.length)
             //getOnePageOfText(1)
             GlobalScope.launch(Dispatchers.IO){
                 startReading(1)
@@ -236,8 +236,10 @@ class ReadingActivity : AppCompatActivity() {
                 val totalLength = min(dictForm.length, reading.length)
                 var end = basePosition + totalLength
 
+                if (token.isKanjiWord) {
+                    AddFurigana(token, ssb)
+                }
 
-                AddFurigana(token, ssb)
 
                 if (token.isKanjiWord || token.isKanaWord) {
                     ssb.setSpan(

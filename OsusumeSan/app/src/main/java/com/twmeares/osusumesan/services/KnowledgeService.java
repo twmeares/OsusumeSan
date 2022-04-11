@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -172,10 +173,11 @@ public class KnowledgeService extends SQLiteOpenHelper{
      */
     public void UpdateKnowledgeBook(String book, Boolean isKnown){
         try {
-            String query = String.format("update knowledge set isknown = %d " +
-                            " where book = '%s' ",
-                            (isKnown ? 1: 0), book);
-            sqliteDataBase.execSQL(query);
+            ContentValues cv = new ContentValues();
+            cv.put("isknown", (isKnown ? 1: 0));
+            book = "%" + book + "%";
+            int rowsAffected = sqliteDataBase.update("knowledge", cv, "book like ?", new String[]{book});
+            Log.d(TAG, String.valueOf(rowsAffected) + " rows updated.");
         } catch (Exception ex){
             String msg = ex.getMessage();
             Log.e(TAG, msg);
@@ -187,10 +189,11 @@ public class KnowledgeService extends SQLiteOpenHelper{
      */
     public void UpdateKnowledgeJLPT(String jlptLvl, Boolean isKnown){
         try {
-            String query = String.format("update knowledge set isknown = %d " +
-                            " where jlptlvl = '%s' ",
-                    (isKnown ? 1: 0), jlptLvl);
-            sqliteDataBase.execSQL(query);
+            jlptLvl = "%" + jlptLvl + "%";
+            ContentValues cv = new ContentValues();
+            cv.put("isknown", (isKnown ? 1: 0));
+            int rowsAffected = sqliteDataBase.update("knowledge", cv, "jlptlvl like ?", new String[]{jlptLvl});
+            Log.d(TAG, String.valueOf(rowsAffected) + " rows updated.");
         } catch (Exception ex){
             String msg = ex.getMessage();
             Log.e(TAG, msg);

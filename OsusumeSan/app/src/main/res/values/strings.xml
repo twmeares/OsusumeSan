@@ -48,4 +48,5 @@
     <!--    Reading list-->
     <string name="reading_list_title">Title</string>
     <string name="reading_list_level">Difficulty</string>
+    <string name="reading_list_article_summary">Loading details</string>
 </resources>

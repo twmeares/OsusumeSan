@@ -16,6 +16,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class KnowledgeService extends SQLiteOpenHelper{
     // Data Base Name.
     private static final String DATABASE_NAME = "knowledge.db";
@@ -147,6 +151,44 @@ public class KnowledgeService extends SQLiteOpenHelper{
         }
         cursor.close();
         return isKnown;
+    }
+
+    /**
+     * Get percentage of known words from query list
+     */
+    public Float GetPercentKnown(JSONObject wordList){
+        Float percentKnown = 0f;
+        try {
+            JSONArray verbList = wordList.getJSONArray("verb");
+            JSONArray kangoList = wordList.getJSONArray("kango");
+            JSONArray wagoList = wordList.getJSONArray("wago");
+            int verbLength = verbList.length();
+            int kangoLength = kangoList.length();
+            int wagoLength = wagoList.length();
+            Float totalWords = Float.valueOf(verbLength + kangoLength + wagoLength);
+            String inClause = (verbLength > 0 ? verbList.toString() + "," : "")
+                    + (kangoLength > 0 ? kangoList.toString() + "," : "")
+                    + (wagoLength > 0 ? wagoList.toString() : "");
+            inClause = inClause.replace("[", "").replace("]", "").replace("\"", "'");
+            String query = String.format("select count(*) From knowledge where isknown = 1 and word in (%s)", inClause);
+            Cursor cursor = sqliteDataBase.rawQuery(query, null);
+            int countKnown = 0;
+            if(cursor.getCount()>0){
+                if(cursor.moveToFirst()){
+                    do{
+                        countKnown = cursor.getInt(0);
+                    }while (cursor.moveToNext());
+                }
+            }
+            cursor.close();
+            percentKnown = (countKnown / totalWords) * 100f;
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
+
+        return percentKnown;
     }
 
     /**

@@ -8,6 +8,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.models.Article
+import com.twmeares.osusumesan.services.AozoraStatsHelper
+import com.twmeares.osusumesan.services.KnowledgeService
 
 // Onclick setup based on https://stackoverflow.com/questions/24471109/recyclerview-onclick?page=1&tab=scoredesc#tab-top
 // General adapter code based on https://developer.android.com/codelabs/basic-android-kotlin-training-recyclerview-scrollable-list?continue=https%3A%2F%2Fdeveloper.android.com%2Fcourses%2Fpathways%2Fandroid-basics-kotlin-unit-2-pathway-3%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fbasic-android-kotlin-training-recyclerview-scrollable-list#4
@@ -15,12 +17,21 @@ import com.twmeares.osusumesan.models.Article
 /**
  * Adapter for the [RecyclerView] in [MainActivity]. Displays [Affirmation] data object.
  */
-class ArticleItemAdapter(
-    private val context: Context,
+class ArticleItemAdapter : RecyclerView.Adapter<ArticleItemAdapter.ItemViewHolder> {
+
+    private val context: Context
     private val dataset: List<Article>
-) : RecyclerView.Adapter<ArticleItemAdapter.ItemViewHolder>() {
+
+    constructor(context: Context, dataset: List<Article>) : super() {
+        this.context = context
+        this.dataset = dataset
+        aozoraStatsHelper = AozoraStatsHelper.GetInstance(context)
+        knowledgeService = KnowledgeService.GetInstance(context)
+    }
 
     private lateinit var onItemClickListener: OnItemClickListener
+    private lateinit var aozoraStatsHelper: AozoraStatsHelper
+    private lateinit var knowledgeService: KnowledgeService
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder.
@@ -53,12 +64,20 @@ class ArticleItemAdapter(
         val item = dataset[position]
         holder.titleTextView.text = item.title
         holder.levelTextView.text = item.level.toString()
-        holder.summaryTextView.text = item.summary
+
         holder.itemView.setOnClickListener(View.OnClickListener {
             onItemClickListener.onItemClick(
                 position
             )
         })
+
+        // TODO look into making this async and then updating the display as the calculation finishes.
+        // Check article against user knowledge level
+        val wordList = aozoraStatsHelper.getUniqueWords(item.bookId)
+        val percentKnown = knowledgeService.GetPercentKnown(wordList)
+        var summary = "%.0f".format(percentKnown) + "% known words. Author(s): " + item.summary
+        holder.summaryTextView.text = summary
+
     }
 
     /**

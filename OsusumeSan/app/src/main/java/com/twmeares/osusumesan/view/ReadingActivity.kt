@@ -36,17 +36,19 @@ class ReadingActivity : AppCompatActivity() {
     private lateinit var jmDictFuriHelper: JMDictFuriHelper
     private lateinit var dictService: DictionaryLookupService
     private lateinit var aozoraService: AozoraService
-    private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
-    private val aozoraArticleCallback = AozoraService.Callback(::LoadAozoraResult)
     private lateinit var knowledgeService: KnowledgeService
     private lateinit var tokens: List<OsusumeSanToken>
-    private val TAG: String = "ReadingActivity"
     private lateinit var curPageText: String
     private lateinit var fullText: String //full article text without any pagination
     private lateinit var article: Article
+    private val TAG: String = "ReadingActivity"
+    private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
+    private val aozoraArticleCallback = AozoraService.Callback(::LoadAozoraResult)
     private var currentPageNum: Int = 0
     private var isTextMultiPage: Boolean = false
     private var lastLineCutCharNum: Int = 0
+    private var furiCountMap: MutableMap<String, Int> = mutableMapOf<String, Int>()
+    private var furiganaTapper: Int = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +57,9 @@ class ReadingActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initMainTextView()
+        val sharedPref: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val fallbackVal = 99
+        furiganaTapper = sharedPref.getString("furigana_tapper_preference", "99")?.toIntOrNull() ?: fallbackVal
 
         val inputText = intent.getStringExtra("inputText")
         //val bookText = intent.getStringExtra("bookText")
@@ -89,6 +94,7 @@ class ReadingActivity : AppCompatActivity() {
             //var text = "食べてる"
             //var text = "にほんごをべんきょうする"
             //text = "憚る" //"憚かる" // this word isn't recognized in kuromoji but is in sudachi
+            //fullText = "花花花花花花花花"
 
             //getOnePageOfText(1)
             GlobalScope.launch(Dispatchers.IO){
@@ -351,6 +357,13 @@ class ReadingActivity : AppCompatActivity() {
     }
 
     fun AddFurigana(token: OsusumeSanToken, ssb: Spannable){
+        // TODO create setting to allow a user to totally turn off furigana. Replace the hardcoded
+        // bool with the setting.
+        var furiTotallyDisabled = false
+        if (furiTotallyDisabled == true){
+            return
+        }
+
         val reading = token.reading
         val dictForm = token.dictForm
         val basePosition = token.position
@@ -360,14 +373,20 @@ class ReadingActivity : AppCompatActivity() {
         val underline = false
         token.isFuriganaEnabled = !knowledgeService.IsKnown(dictForm)
 
-        val sharedPref: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val fallbackVal = 99
-        val furiganaTapper = sharedPref.getString("furigana_tapper_preference", "99")?.toIntOrNull() ?: fallbackVal
+        // Only show the furigana for a given word n times as determined by furiganaTapper.
+        var furiganaLimitExceeded = false
+        val count: Int? = furiCountMap[dictForm]
+        if (count != null){
+            if (count >= furiganaTapper) {
+                furiganaLimitExceeded = true
+            } else {
+                furiCountMap[dictForm] = count + 1
+            }
+        } else {
+            furiCountMap[dictForm] = 1
+        }
 
-        // TODO add a check to allow showing furigana only for the first n times. Can use a dict
-        // and if the number is exceeded then don't do this inner section.
-        // use the above furiganaTapper pref for this.
-        var furiganaLimitExceeded = false //TODO replace with the real thing.
+
 
         if (furiganaLimitExceeded == false) {
             // Add furigana to the tokens that contain kanji.

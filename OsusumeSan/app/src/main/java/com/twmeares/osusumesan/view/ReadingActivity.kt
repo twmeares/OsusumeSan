@@ -27,6 +27,7 @@ import android.widget.Toast
 import com.twmeares.osusumesan.models.Article
 import com.twmeares.osusumesan.services.*
 import android.text.StaticLayout
+import androidx.startup.AppInitializer
 
 
 class ReadingActivity : AppCompatActivity() {
@@ -216,16 +217,7 @@ class ReadingActivity : AppCompatActivity() {
 
 
         if (!this::tokenizer.isInitialized){
-            val useSudachi = false
-            if (useSudachi){
-                var sysDictHelper =
-                    SysDictHelper(this)
-                sysDictHelper.createDataBase()
-                var dict = sysDictHelper.dictionary
-                tokenizer = OsusumeSanTokenizer(dict)
-            } else {
-                tokenizer = OsusumeSanTokenizer()
-            }
+            tokenizer = AppInitializer.getInstance(this).initializeComponent(TokenizerInitializer::class.java)
         }
     }
 

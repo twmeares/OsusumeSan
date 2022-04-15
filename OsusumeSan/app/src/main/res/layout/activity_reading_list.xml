@@ -19,9 +19,9 @@
 
             <TextView
                 android:id="@+id/reading_list_level"
-                android:layout_width="5dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Difficulty"
+                android:text="@string/reading_list_level"
                 android:textSize="@dimen/font_size_16"
                 android:textStyle="bold"
                 android:layout_weight="1"
@@ -34,6 +34,15 @@
                 android:textSize="@dimen/font_size_16"
                 android:textStyle="bold"
                 android:layout_weight="3"
+                />
+            <TextView
+                android:id="@+id/reading_list_known_words"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reading_list_known_words"
+                android:textSize="@dimen/font_size_16"
+                android:textStyle="bold"
+                android:layout_weight="1"
                 />
 
         </LinearLayout>

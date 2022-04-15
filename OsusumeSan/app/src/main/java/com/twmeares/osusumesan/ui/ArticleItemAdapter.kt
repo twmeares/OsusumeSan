@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.models.Article
@@ -40,6 +41,7 @@ class ArticleItemAdapter : RecyclerView.Adapter<ArticleItemAdapter.ItemViewHolde
         val titleTextView: TextView = view.findViewById(R.id.article_item_title)
         val levelTextView: TextView = view.findViewById(R.id.article_item_level)
         val summaryTextView: TextView = view.findViewById(R.id.article_item_summary)
+        val percentKnownTextView: TextView = view.findViewById(R.id.article_item_known_words)
     }
 
     fun setOnItemClickListener(onItemClickListener: OnItemClickListener) {
@@ -64,7 +66,7 @@ class ArticleItemAdapter : RecyclerView.Adapter<ArticleItemAdapter.ItemViewHolde
         val item = dataset[position]
         holder.titleTextView.text = item.title
         holder.levelTextView.text = item.level.toString()
-
+        holder.summaryTextView.text = item.summary
         holder.itemView.setOnClickListener(View.OnClickListener {
             onItemClickListener.onItemClick(
                 position
@@ -75,8 +77,8 @@ class ArticleItemAdapter : RecyclerView.Adapter<ArticleItemAdapter.ItemViewHolde
         // Check article against user knowledge level
         val wordList = aozoraStatsHelper.getUniqueWords(item.bookId)
         val percentKnown = knowledgeService.GetPercentKnown(wordList)
-        var summary = "%.0f".format(percentKnown) + "% known words. Author(s): " + item.summary
-        holder.summaryTextView.text = summary
+        holder.percentKnownTextView.setTextColor(ContextCompat.getColor(context, R.color.purple_700))
+        holder.percentKnownTextView.text = "%.0f".format(percentKnown) + "%"
 
     }
 

@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -15,6 +17,8 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+
+import com.twmeares.osusumesan.models.KnowledgeItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -151,6 +155,26 @@ public class KnowledgeService extends SQLiteOpenHelper{
         }
         cursor.close();
         return isKnown;
+    }
+
+    /**
+     * return the list of known/unknown words for the user.
+     */
+    public List<KnowledgeItem> GetKnowledge(){
+        String query = String.format("select isknown, word From knowledge order by word");
+        Cursor cursor = sqliteDataBase.rawQuery(query, null);
+        List<KnowledgeItem> knowledgeList = new ArrayList<>();
+        if(cursor.getCount()>0){
+            if(cursor.moveToFirst()){
+                do{
+                    boolean isKnown = cursor.getInt(0) == 1 ? true : false;
+                    String word = cursor.getString(1);
+                    knowledgeList.add(new KnowledgeItem(isKnown, word));
+                }while (cursor.moveToNext());
+            }
+        }
+        cursor.close();
+        return knowledgeList;
     }
 
     /**

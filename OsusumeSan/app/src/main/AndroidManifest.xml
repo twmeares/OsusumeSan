@@ -12,14 +12,20 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.OsusumeSan">
+        <activity
+            android:name=".view.KnowledgeListActivity"
+            android:exported="false" />
+
         <provider
             android:name="androidx.startup.InitializationProvider"
-            tools:node="merge"
             android:authorities="${applicationId}.androidx-startup"
-            android:exported="false">
-            <meta-data  android:name="com.twmeares.osusumesan.services.TokenizerInitializer"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="com.twmeares.osusumesan.services.TokenizerInitializer"
                 android:value="androidx.startup" />
         </provider>
+
         <activity
             android:name=".view.ReadingListActivity"
             android:exported="false" />

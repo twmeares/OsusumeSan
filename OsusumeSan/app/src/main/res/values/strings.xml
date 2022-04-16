@@ -39,15 +39,21 @@
     <string name="n4_key">n4_preference</string>
     <string name="n5_title">JLPT N5</string>
     <string name="n5_key">n5_preference</string>
+    <string name="btnEditKnowledge">Edit Known Words</string>
 
     <!-- Display Preferences -->
     <string name="display_header">Display Settings</string>
     <string name="furigana_tapper_title">Furigana Tapper</string>
     <string name="furigana_tapper_summary">Max times to display for new words</string>
 
-    <!--    Reading list-->
+    <!-- Reading list-->
     <string name="reading_list_title">Title</string>
     <string name="reading_list_level">Difficulty</string>
     <string name="reading_list_known_words">% Known Words</string>
     <string name="reading_list_article_summary">Loading details</string>
+
+    <!-- Knowledge list -->
+    <string name="knowledge_list_isknown">Is Known</string>
+    <string name="knowledge_list_word">Word</string>
+    <string name="knowledge_list_reading">Reading</string>
 </resources>

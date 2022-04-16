@@ -1,27 +1,31 @@
 package com.twmeares.osusumesan.view
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
 import com.twmeares.osusumesan.R
-import android.widget.EditText
 
-import androidx.annotation.NonNull
 import androidx.preference.EditTextPreference
-import androidx.preference.EditTextPreference.OnBindEditTextListener
-
 
 import android.content.SharedPreferences
+import android.util.Log
+import android.view.View
+import com.twmeares.osusumesan.databinding.SettingsActivityBinding
 import com.twmeares.osusumesan.services.KnowledgeService
 
 
 class SettingsActivity : AppCompatActivity() {
+    private lateinit var binding: SettingsActivityBinding
+    private val TAG = "SettingsActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.settings_activity)
+        binding = SettingsActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setupClickListeners(binding.root)
         if (savedInstanceState == null) {
             supportFragmentManager
                 .beginTransaction()
@@ -40,6 +44,21 @@ class SettingsActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+
+    private fun setupClickListeners(view: View) {
+
+        binding.btnEditKnowledge.setOnClickListener {
+            Log.i(TAG, "clicked Edit Knowledge")
+            openKnowledgeList()
+        }
+    }
+
+    fun openKnowledgeList() {
+        val intent = Intent(this, KnowledgeListActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        this.startActivity(intent)
+    }
+
 
     class SettingsFragment : PreferenceFragmentCompat(),
         SharedPreferences.OnSharedPreferenceChangeListener {

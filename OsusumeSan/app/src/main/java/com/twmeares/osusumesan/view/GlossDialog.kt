@@ -75,13 +75,13 @@ class GlossDialog : DialogFragment() {
         var dictResult: DictionaryResult = arguments?.getSerializable(KEY_DICT_RESULT) as DictionaryResult
         var title = dictResult.dictForm + "   " + dictResult.reading
         title = title.trim()
-        val glossTitileSSB = SpannableStringBuilder(title)
+        val glossTitleSSB = SpannableStringBuilder(title)
         if (!dictResult.dictForm.equals("")){
             val titleBoldStart = 0
             val titleBoldEnd = dictResult.dictForm.length
-            glossTitileSSB.setSpan(StyleSpan(Typeface.BOLD), titleBoldStart, titleBoldEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            glossTitleSSB.setSpan(StyleSpan(Typeface.BOLD), titleBoldStart, titleBoldEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
-        binding.glossTitle.text = glossTitileSSB
+        binding.glossTitle.text = glossTitleSSB
         var glossDetails = StringBuilder()
         if (dictResult.meanings.size > 0) {
             glossDetails.append(dictResult.meanings.first())

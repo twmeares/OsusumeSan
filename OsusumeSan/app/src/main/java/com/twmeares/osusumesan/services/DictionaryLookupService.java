@@ -18,7 +18,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,7 +38,17 @@ public class DictionaryLookupService implements iDictionaryLookupService{
     public void Search(String word, String reading, Boolean isFuriganaEnabled, Callback callback) {
         queue.cancelAll(this);
 
-        StringRequest stringRequest = BuildSearchStringRequest(word, reading, isFuriganaEnabled, callback);
+        StringRequest stringRequest = SearchRequest(word, reading, isFuriganaEnabled, callback);
+        stringRequest.setTag(this);
+
+        queue.add(stringRequest);
+    }
+
+    @Override
+    public void SearchMultiResult(String word, MultiResultCallback callback) {
+        queue.cancelAll(this);
+
+        StringRequest stringRequest = SearchMultiResultRequest(word, callback);
         stringRequest.setTag(this);
 
         queue.add(stringRequest);
@@ -48,7 +57,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
     // TODO: in the future could create a SearchMany method which returns close matches.
     // Would just need to remove the matchFound logic and return if any result is found.
 
-    private StringRequest BuildSearchStringRequest(String word, String reading, Boolean isFuriganaEnabled, Callback callback) {
+    private StringRequest SearchRequest(String word, String reading, Boolean isFuriganaEnabled, Callback callback) {
         //Code modified based on https://wtmimura.com/post/calling-api-on-android-studio/
         String url = URL_PREFIX + word;
 
@@ -76,7 +85,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                     || reading.equals( KanaConverter.convertKana(entryReading, conversion_flags)) ))
                                 {
                                     matchFound = true;
-                                    DictionaryResult dictResult = ExtractDictionaryResult(word, reading, isFuriganaEnabled, entry);
+                                    DictionaryResult dictResult = ExtractDictionaryResult(reading, isFuriganaEnabled, entry);
                                     callback.DisplayDictResult(dictResult);
                                     break;
                                 } else if ( reading.equals(entryReading)
@@ -89,7 +98,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                         // This case is useful for words that are usually only kana or
                                         // words that usually have kanji but the kanji wasn't used in the
                                         // input text.
-                                        DictionaryResult dictResult = ExtractDictionaryResult(word, reading, isFuriganaEnabled, entry);
+                                        DictionaryResult dictResult = ExtractDictionaryResult(reading, isFuriganaEnabled, entry);
                                         callback.DisplayDictResult(dictResult);
                                         break;
                                     }
@@ -105,7 +114,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
 
                                         // throwing out the reading here and passing the word twice since the reading is likely too
                                         // specific to the current usage and that's why this case matched for word isntead of reading
-                                        DictionaryResult dictResult = ExtractDictionaryResult(word, word, isFuriganaEnabled, entry);
+                                        DictionaryResult dictResult = ExtractDictionaryResult(word, isFuriganaEnabled, entry);
                                         callback.DisplayDictResult(dictResult);
                                         break;
                                     }
@@ -138,9 +147,51 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                 });
     }
 
-    private DictionaryResult ExtractDictionaryResult(String word, String reading, Boolean isFuriganaEnabled, JSONObject entry) throws JSONException {
+    private StringRequest SearchMultiResultRequest(String word, MultiResultCallback callback) {
+        String url = URL_PREFIX + word;
+
+        return new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            List<DictionaryResult> dictResults = new ArrayList<>();
+                            JSONArray result = new JSONObject(response).getJSONArray("data");
+                            Boolean matchFound = false;
+                            Boolean readingOnlyMatch = false;
+                            for (int i = 0 ; i < result.length(); i++) {
+                                JSONObject entry = result.getJSONObject(i);
+
+                                if (!entry.has("japanese") || !entry.getJSONArray("japanese").getJSONObject(0).has("reading")) {
+                                    continue;
+                                }
+                                dictResults.add(ExtractDictionaryResult(entry));
+                            }
+                            callback.DisplayDictResult(dictResults);
+                        } catch (JSONException e) {
+                            Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+                            Log.e(TAG, "problem with parsing json. EX:" + e.getMessage());
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // display a simple message on the screen
+                        Toast.makeText(context, "Got an error response from Jisho while searching.", Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Error from Jisho while searching. " + error.getMessage());
+                    }
+                });
+    }
+
+
+    private DictionaryResult ExtractDictionaryResult(String reading, Boolean isFuriganaEnabled, JSONObject entry) throws JSONException {
         String dictForm = entry.getJSONArray("japanese").getJSONObject(0).optString("word", "");
-        //String reading = entry.getJSONArray("japanese").getJSONObject(0).getString("reading");
+        // Is there really a need to supply the reading isntead of getting it from the entry???
+        String reading2 = entry.getJSONArray("japanese").getJSONObject(0).getString("reading");
+        if (!reading.equals(reading2)){
+            Log.d(TAG, "found a diff");
+        }
         List<String> meanings = new ArrayList<>();
         List<String> pos = new ArrayList<>();
         List<String> tags = new ArrayList<>();
@@ -193,5 +244,81 @@ public class DictionaryLookupService implements iDictionaryLookupService{
         return dictResult;
     }
 
+    private DictionaryResult ExtractDictionaryResult(JSONObject entry) throws JSONException {
+        // loop over japaneseArray json obj and make a comma separated string for reading and dictForm.
+        String dictForm = "";
+        String reading = "";
+        JSONArray japaneseArray = entry.getJSONArray("japanese");
+        for (int idx = 0; idx < japaneseArray.length(); idx++) {
+            String itemWord = japaneseArray.getJSONObject(idx).optString("word", "");
+            if (!itemWord.equals("") && !dictForm.contains(itemWord)) {
+                if (idx > 0 && !dictForm.equals("")) {
+                    dictForm += ", ";
+                }
+
+                dictForm += itemWord;
+            }
+
+            String itemReading = japaneseArray.getJSONObject(idx).optString("reading", "");
+            if (!itemReading.equals("") && !reading.contains(itemReading)) {
+                if (idx > 0 && !reading.equals("")) {
+                    reading += ", ";
+                }
+
+                reading += itemReading;
+            }
+        }
+
+        List<String> meanings = new ArrayList<>();
+        List<String> pos = new ArrayList<>();
+        List<String> tags = new ArrayList<>();
+        JSONArray sensesArray = entry.getJSONArray("senses");
+
+        // each entry can have multiple senses
+        for (int j = 0; j < sensesArray.length(); j++) {
+            StringBuilder sensesBuilder = new StringBuilder();
+            StringBuilder posBuilder = new StringBuilder();
+            StringBuilder tagsBuilder = new StringBuilder();
+            JSONArray senses = sensesArray.getJSONObject(j).getJSONArray("english_definitions");
+            JSONArray posArray = sensesArray.getJSONObject(j).getJSONArray("parts_of_speech");
+            JSONArray tagsArray = sensesArray.getJSONObject(j).getJSONArray("tags");
+            // each english definition can have multiple values
+            // this for is a big ugly but tostring on the array and .Join didn't give the format
+            // I wanted and I didn't want to strip quotes in case they were part of the entry.
+            for (int k = 0; k < senses.length(); k++) {
+                if (k>0){
+                    sensesBuilder.append(", ");
+                }
+                String sense = senses.getString(k);
+                sensesBuilder.append(sense);
+            }
+            meanings.add(sensesBuilder.toString());
+
+            // extract the parts of seach for this SensesArray Entry.
+            for (int k = 0; k < posArray.length(); k++) {
+                if (k>0){
+                    posBuilder.append(", ");
+                }
+                String posValue = posArray.getString(k);
+                posBuilder.append(posValue);
+            }
+            pos.add(posBuilder.toString());
+
+            // extract the tags for this SensesArray Entry. e.g. (Usually written kana only)
+            for (int k = 0; k < tagsArray.length(); k++) {
+                if (k>0){
+                    tagsBuilder.append(", ");
+                }
+                String tagValue = tagsArray.getString(k);
+                tagsBuilder.append(tagValue);
+            }
+            tags.add(tagsBuilder.toString());
+        }
+        String jlptLvl = entry.getString("jlpt")
+                .replace("jlpt-", "")
+                .replace("\"", "");
+        DictionaryResult dictResult = new DictionaryResult(dictForm, reading, meanings, jlptLvl, pos, tags, false);
+        return dictResult;
+    }
 
 }

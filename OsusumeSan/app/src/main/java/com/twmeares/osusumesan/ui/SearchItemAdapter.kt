@@ -1,6 +1,10 @@
 package com.twmeares.osusumesan.ui
 
 import android.content.Context
+import android.graphics.Typeface
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,7 +35,9 @@ class SearchItemAdapter : RecyclerView.Adapter<SearchItemAdapter.ItemViewHolder>
     // Provide a reference to the views for each data item
     class ItemViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
         val addBtn: ImageButton = view.findViewById(R.id.search_item_add)
-        val dictFormTextView: TextView = view.findViewById(R.id.search_item_dictForm)
+        val titleTextView: TextView = view.findViewById(R.id.search_item_title)
+        val detailsTextView: TextView = view.findViewById(R.id.search_item_details)
+        val jlptTextView: TextView = view.findViewById(R.id.search_item_jlpt)
     }
 
     fun setOnItemClickListener(onItemClickListener: OnItemClickListener) {
@@ -54,8 +60,49 @@ class SearchItemAdapter : RecyclerView.Adapter<SearchItemAdapter.ItemViewHolder>
      */
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val item = dataset[position]
-        holder.dictFormTextView.text = item.dictForm
+        var title = item.dictForm + "   " + item.reading
+        title = title.trim()
+        val titleSSB = SpannableStringBuilder(title)
+        if (!item.dictForm.equals("")){
+            val titleBoldStart = 0
+            val titleBoldEnd = item.dictForm.length
+            titleSSB.setSpan(StyleSpan(Typeface.BOLD), titleBoldStart, titleBoldEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        holder.titleTextView.text = titleSSB
+        
+        val detailsBuilder = StringBuilder()
+        for (idx in 0 until item.meanings.size){
+            if (idx > 0){
+                detailsBuilder.append("\n")
+            }
 
+            detailsBuilder.append((idx + 1).toString() + ". ")
+            detailsBuilder.append(item.meanings[idx])
+
+            if (idx < item.pos.size && !item.pos[idx].equals("")) {
+                detailsBuilder.append(" (")
+                detailsBuilder.append(item.pos[idx])
+                detailsBuilder.append(")")
+            }
+
+
+            if (idx < item.tags.size && !item.tags[idx].equals("")) {
+                detailsBuilder.append(" (")
+                detailsBuilder.append(item.tags[idx])
+                detailsBuilder.append(")")
+            }
+        }
+        holder.detailsTextView.text = detailsBuilder.toString()
+        
+
+        if (!item.jlptLvl.equals("[]")) {
+            holder.jlptTextView.text = item.jlptLvl
+        }
+        else {
+            // must set to empty as not setting it at all causes the view to display incorrect data.
+            holder.jlptTextView.text = "" // set to empty
+        }
+        
         holder.addBtn.setOnClickListener(View.OnClickListener {
             onItemClickListener.onItemClick(
                 position

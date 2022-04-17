@@ -14,9 +14,10 @@
         android:text="@string/gloss_title"
         android:textSize="@dimen/font_size_20"
         android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/btnFurigana"
+        />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/glossDetails"
@@ -27,7 +28,8 @@
         android:textSize="@dimen/font_size_16"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/glossTitle" />
+        app:layout_constraintTop_toBottomOf="@id/glossTitle"
+        />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnFurigana"
@@ -39,17 +41,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/glossTitle"
-
         />
-
-<!--    <androidx.appcompat.widget.AppCompatButton-->
-<!--        android:id="@+id/btnNegative"-->
-<!--        android:layout_width="@dimen/dimen_100"-->
-<!--        android:layout_height="@dimen/dimen_48"-->
-<!--        android:layout_marginTop="@dimen/dimen_16"-->
-<!--        android:text="Cancel"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toStartOf="@id/btnPositive"-->
-<!--        app:layout_constraintTop_toBottomOf="@+id/glossDetails" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

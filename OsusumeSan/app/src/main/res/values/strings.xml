@@ -61,4 +61,6 @@
     <string name="btnAddKnowledge">Add new word</string>
 
     <string name="search_title">Search Dictionary</string>
+    <string name="no_result_text">Search Jisho for words.\nSearch allows English, Japense, or Romaji.</string>
+
 </resources>

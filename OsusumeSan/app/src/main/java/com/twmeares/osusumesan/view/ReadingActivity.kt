@@ -8,9 +8,6 @@ import android.text.style.ClickableSpan
 import android.util.Log
 import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.databinding.ActivityReadingBinding
-import com.twmeares.osusumesan.models.DictionaryResult
-import com.twmeares.osusumesan.models.OsusumeSanToken
-import com.twmeares.osusumesan.models.OsusumeSanTokenizer
 import com.twmeares.osusumesan.ui.MovementMethod
 import com.twmeares.osusumesan.ui.RubySpan
 import java.lang.Integer.min
@@ -24,13 +21,14 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import android.widget.Toast
 
-import com.twmeares.osusumesan.models.Article
 import com.twmeares.osusumesan.services.*
 import android.text.StaticLayout
 import androidx.startup.AppInitializer
+import com.twmeares.osusumesan.models.*
 
 
 class ReadingActivity : AppCompatActivity() {
+    private var curPageStartOffset: Int = 0
     private lateinit var binding: ActivityReadingBinding
     private lateinit var tokenizer: OsusumeSanTokenizer
     private lateinit var mainTextView: CustomTextView
@@ -48,7 +46,7 @@ class ReadingActivity : AppCompatActivity() {
     private var currentPageNum: Int = 0
     private var isTextMultiPage: Boolean = false
     private var lastLineCutCharNum: Int = 0
-    private var furiCountMap: MutableMap<String, Int> = mutableMapOf<String, Int>()
+    private var furiTrackerMap: MutableMap<String, FuriTracker> = mutableMapOf<String, FuriTracker>()
     private var furiganaTapper: Int = 0
 
 
@@ -234,10 +232,8 @@ class ReadingActivity : AppCompatActivity() {
                 val totalLength = min(dictForm.length, reading.length)
                 var end = basePosition + totalLength
 
-                if (token.isKanjiWord) {
-                    AddFurigana(token, ssb)
-                }
 
+                AddFurigana(token, ssb)
 
                 if (token.isKanjiWord || token.isKanaWord) {
                     ssb.setSpan(
@@ -309,6 +305,9 @@ class ReadingActivity : AppCompatActivity() {
             tokens.forEachIndexed { tokenIdx, token ->
                 if (token.dictForm.equals(word)){
                     if (knowledgeUpdated == false){
+                        // Only updating knowledge for the first match of the token against the dictForm.
+                        // This is to prevent calling updateKnowledge multiple times if the word appears
+                        // in the text more than once.
                         knowledgeService.UpdateKnowledge(word, isKnown)
                         knowledgeUpdated = true
                     }
@@ -331,10 +330,14 @@ class ReadingActivity : AppCompatActivity() {
             tokens.forEachIndexed { tokenIdx, token ->
                 if (token.dictForm.equals(word)){
                     if (knowledgeUpdated == false){
+                        // Only updating knowledge for the first match of the token against the dictForm.
+                        // This is to prevent calling updateKnowledge multiple times if the word appears
+                        // in the text more than once.
                         knowledgeService.UpdateKnowledge(word, isKnown)
                         knowledgeUpdated = true
+                        // User clicked show furigana so clearing the tapper count map to ensure it gets shown.
+                        furiTrackerMap.remove(word)
                     }
-
                     AddFurigana(token, spannable)
                 }
             }
@@ -349,6 +352,11 @@ class ReadingActivity : AppCompatActivity() {
     }
 
     fun AddFurigana(token: OsusumeSanToken, ssb: Spannable){
+        if (!token.isKanjiWord) {
+            // No need for furigana if the token contains zero kanji characters.
+            return
+        }
+
         // TODO create setting to allow a user to totally turn off furigana. Replace the hardcoded
         // bool with the setting.
         var furiTotallyDisabled = false
@@ -365,24 +373,40 @@ class ReadingActivity : AppCompatActivity() {
         val underline = false
         token.isFuriganaEnabled = !knowledgeService.IsKnown(dictForm)
 
-        // Only show the furigana for a given word n times as determined by furiganaTapper.
+        if (token.isFuriganaEnabled == false){
+            return
+        }
+
+        // Only show the furigana for a given word n times as determined by furitracker.
+        // Word can only be shown n times where n = furiganaTapper
         var furiganaLimitExceeded = false
-        val count: Int? = furiCountMap[dictForm]
-        if (count != null){
-            if (count >= furiganaTapper) {
-                furiganaLimitExceeded = true
-            } else {
-                furiCountMap[dictForm] = count + 1
+        val furiTracker: FuriTracker? = furiTrackerMap[dictForm]
+        val wordPosInFullText: Int = basePosition + curPageStartOffset
+        if (furiTracker != null){
+            // TLDR; don't update the tracker for pages that have already been shown.
+            // Only update for furiganaLimitExceeded or furiTrackerMap if the current position is
+            // after the last position where the word was shown. This is to avoid re-updating
+            // If a users goes back and forth between pages.
+            if (wordPosInFullText > furiTracker.lastPositionShown){
+                if (furiTracker.countShown >= furiganaTapper) {
+                    furiganaLimitExceeded = true
+                    // Must override token level isFuriganaEnabled to be able to show the proper text in
+                    // the gloss.
+                    token.isFuriganaEnabled = false
+                } else {
+                    furiTracker.countShown += 1
+                    furiTracker.lastPositionShown = wordPosInFullText
+                }
             }
         } else {
-            furiCountMap[dictForm] = 1
+            furiTrackerMap[dictForm] = FuriTracker(wordPosInFullText, 1)
         }
 
 
 
         if (furiganaLimitExceeded == false) {
             // Add furigana to the tokens that contain kanji.
-            if (token.isKanjiWord && token.isFuriganaEnabled && reading != null && dictForm != null){
+            if (token.isKanjiWord && reading != null && dictForm != null){
                 val furiHelper = jmDictFuriHelper.getFuriganaFromDB(dictForm, reading)
                 if (furiHelper != null) {
                     val furiList = furiHelper.split(";")
@@ -479,13 +503,13 @@ class ReadingActivity : AppCompatActivity() {
             val endLineNum = Math.min((mainTextView.maxLines * pageNum) - 1, lastLineIdx)
             val startPos = textLayout.getLineStart(startLineNum)
             val endPos = textLayout.getLineEnd(endLineNum)
-            var startOffset = startPos
+            curPageStartOffset = startPos
             // Account for any characters that got cut off from the previous page.
             if (pageNum > currentPageNum) {
-                startOffset - lastLineCutCharNum
-                startOffset = Math.max(0, startOffset) //don't allow negative.
+                curPageStartOffset - lastLineCutCharNum
+                curPageStartOffset = Math.max(0, curPageStartOffset) //don't allow negative.
             }
-            curPageText = fullText.substring(startOffset, endPos)
+            curPageText = fullText.substring(curPageStartOffset, endPos)
             currentPageNum = pageNum
             return true
         }

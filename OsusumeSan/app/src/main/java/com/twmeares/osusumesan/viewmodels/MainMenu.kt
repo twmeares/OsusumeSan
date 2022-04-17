@@ -6,10 +6,7 @@ import android.app.Activity
 import android.util.Log
 import com.twmeares.osusumesan.services.JMDictFuriHelper
 import com.twmeares.osusumesan.services.KnowledgeService
-import com.twmeares.osusumesan.view.InputTextActivity
-import com.twmeares.osusumesan.view.ReadingActivity
-import com.twmeares.osusumesan.view.ReadingListActivity
-import com.twmeares.osusumesan.view.SettingsActivity
+import com.twmeares.osusumesan.view.*
 
 
 class MainMenu() {
@@ -18,10 +15,6 @@ class MainMenu() {
     private lateinit var knowledgeService: KnowledgeService
     private lateinit var jmDictFuriHelper: JMDictFuriHelper
     private var runOnce: Boolean = true
-
-//    fun MainMenu(context: Activity?) {
-//        activity = context
-//    }
 
     constructor(context: Activity?) : this() {
         this.activity = context
@@ -56,6 +49,13 @@ class MainMenu() {
     fun StartInputText() {
         Log.i(TAG, "MainMenu StartInputText")
         val intent = Intent(activity, InputTextActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        activity!!.startActivity(intent)
+    }
+
+    fun StartSearch() {
+        Log.i(TAG, "MainMenu StartSearch")
+        val intent = Intent(activity, SearchActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         activity!!.startActivity(intent)
     }

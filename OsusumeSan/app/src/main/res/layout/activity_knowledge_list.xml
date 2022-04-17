@@ -45,7 +45,27 @@
         android:layout_height="match_parent"
         android:scrollbars="vertical"
         app:layoutManager="LinearLayoutManager"
-        android:layout_below="@id/knowledge_list_header"/>
+        android:layout_below="@id/knowledge_list_header"
+        android:layout_above="@id/knowledgeListBottomLinearLayout"
+
+        />
+    <LinearLayout
+        android:id="@+id/knowledgeListBottomLinearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        android:layout_alignParentBottom="true"
+        >
+
+        <Button
+            android:id="@+id/btnAddKnowledge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btnAddKnowledge"
+            android:layout_marginVertical="8dp"
+            />
+    </LinearLayout>
 </RelativeLayout>
 
 

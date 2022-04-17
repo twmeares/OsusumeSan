@@ -43,6 +43,11 @@ class MainMenuActivity : AppCompatActivity() {
             mainMenu.StartInputText()
         }
 
+        binding.btnSearch.setOnClickListener {
+            Log.i(TAG, "clicked btnSearch")
+            mainMenu.StartSearch()
+        }
+
         binding.btnSettings.setOnClickListener {
             Log.i(TAG, "clicked btnSettings")
             mainMenu.StartSettings()

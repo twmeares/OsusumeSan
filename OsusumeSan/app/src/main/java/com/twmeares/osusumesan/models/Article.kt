@@ -7,6 +7,7 @@ import java.util.regex.Pattern.DOTALL
 
 class Article(val title: String, val level: Double, val summary: String, val bookId: String) : Serializable {
     var text: String = ""
+    var wordList: String = "" //String form of jsonObject to get around java serialization problem
     fun ProcessText(){
         //remove ruby from text, etc.
         val rubyRegex = """(《.*?》)"""

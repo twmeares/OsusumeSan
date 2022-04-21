@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import android.content.ContentValues;
@@ -155,6 +156,27 @@ public class KnowledgeService extends SQLiteOpenHelper{
         }
         cursor.close();
         return isKnown;
+    }
+
+    /**
+     * Get the isknown value for the words in the list.
+     */
+    public HashMap<String, Boolean> GetIsKnownForWordsList(ArrayList<String> wordList){
+        String words = String.join("', '", wordList);
+        words = "'" + words + "'";
+        String query = String.format("select isknown, word From knowledge where word in (%s)",
+        words);
+        Cursor cursor = sqliteDataBase.rawQuery(query, null);
+        HashMap<String, Boolean> outputMap = new HashMap<>();
+        if(cursor.getCount()>0){
+            if(cursor.moveToFirst()){
+                do{
+                    outputMap.put(cursor.getString(1), cursor.getInt(0) == 1 ? true : false);
+                }while (cursor.moveToNext());
+            }
+        }
+        cursor.close();
+        return outputMap;
     }
 
     /**

@@ -5,6 +5,7 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.twmeares.osusumesan.R
 import com.twmeares.osusumesan.models.DictionaryResult
+import com.twmeares.osusumesan.services.iDictionaryLookupService
 
 // Onclick setup based on https://stackoverflow.com/questions/24471109/recyclerview-onclick?page=1&tab=scoredesc#tab-top
 // General adapter code based on https://developer.android.com/codelabs/basic-android-kotlin-training-recyclerview-scrollable-list?continue=https%3A%2F%2Fdeveloper.android.com%2Fcourses%2Fpathways%2Fandroid-basics-kotlin-unit-2-pathway-3%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fbasic-android-kotlin-training-recyclerview-scrollable-list#4
@@ -22,12 +24,16 @@ import com.twmeares.osusumesan.models.DictionaryResult
  */
 class SearchItemAdapter : RecyclerView.Adapter<SearchItemAdapter.ItemViewHolder> {
 
+    private val TAG: String = "SearchItemAdapter"
     private val context: Context
     private val dataset: List<DictionaryResult>
+    private var dictService: iDictionaryLookupService
+    private val displayDictCallback = iDictionaryLookupService.Callback(::GetSingleDictResult)
 
-    constructor(context: Context, dataset: List<DictionaryResult>) : super() {
+    constructor(context: Context, dataset: List<DictionaryResult>, dictService: iDictionaryLookupService ) : super() {
         this.context = context
         this.dataset = dataset
+        this.dictService = dictService
     }
 
     private lateinit var onItemClickListener: OnItemClickListener
@@ -60,6 +66,11 @@ class SearchItemAdapter : RecyclerView.Adapter<SearchItemAdapter.ItemViewHolder>
      */
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val item = dataset[position]
+        if (!dictService.IsInQueue(item.dictForm) && item.meanings == null){
+            // Call the dict service if the word isn't already in the lookup queue and its meaning is empty
+            Log.d(TAG, "calling Jisho search for ${item.dictForm}")
+            dictService.Search(item.dictForm, "", false, displayDictCallback)
+        }
         var title = item.dictForm + "   " + item.reading
         title = title.trim()
         val titleSSB = SpannableStringBuilder(title)
@@ -69,33 +80,38 @@ class SearchItemAdapter : RecyclerView.Adapter<SearchItemAdapter.ItemViewHolder>
             titleSSB.setSpan(StyleSpan(Typeface.BOLD), titleBoldStart, titleBoldEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         holder.titleTextView.text = titleSSB
-        
-        val detailsBuilder = StringBuilder()
-        for (idx in 0 until item.meanings.size){
-            if (idx > 0){
-                detailsBuilder.append("\n")
+
+        if (item.meanings != null){
+            val detailsBuilder = StringBuilder()
+            for (idx in 0 until item.meanings.size){
+                if (idx > 0){
+                    detailsBuilder.append("\n")
+                }
+
+                detailsBuilder.append((idx + 1).toString() + ". ")
+                detailsBuilder.append(item.meanings[idx])
+
+                if (idx < item.pos.size && !item.pos[idx].equals("")) {
+                    detailsBuilder.append(" (")
+                    detailsBuilder.append(item.pos[idx])
+                    detailsBuilder.append(")")
+                }
+
+
+                if (idx < item.tags.size && !item.tags[idx].equals("")) {
+                    detailsBuilder.append(" (")
+                    detailsBuilder.append(item.tags[idx])
+                    detailsBuilder.append(")")
+                }
             }
-
-            detailsBuilder.append((idx + 1).toString() + ". ")
-            detailsBuilder.append(item.meanings[idx])
-
-            if (idx < item.pos.size && !item.pos[idx].equals("")) {
-                detailsBuilder.append(" (")
-                detailsBuilder.append(item.pos[idx])
-                detailsBuilder.append(")")
-            }
-
-
-            if (idx < item.tags.size && !item.tags[idx].equals("")) {
-                detailsBuilder.append(" (")
-                detailsBuilder.append(item.tags[idx])
-                detailsBuilder.append(")")
-            }
+            holder.detailsTextView.text = detailsBuilder.toString()
+        } else {
+            // set it empty
+            holder.detailsTextView.text = ""
         }
-        holder.detailsTextView.text = detailsBuilder.toString()
-        
 
-        if (!item.jlptLvl.equals("[]")) {
+
+        if (!"[]".equals(item.jlptLvl)) {
             holder.jlptTextView.text = item.jlptLvl
         }
         else {
@@ -117,5 +133,22 @@ class SearchItemAdapter : RecyclerView.Adapter<SearchItemAdapter.ItemViewHolder>
 
     interface OnItemClickListener {
         fun onItemClick(position: Int)
+    }
+
+    fun GetSingleDictResult(dictResult: DictionaryResult) {
+        var item = dataset.firstOrNull() { it.meanings == null
+                && ( it.dictForm.equals(dictResult.dictForm)
+                || (it.dictForm.equals(dictResult.reading) && !dictResult.reading.equals(""))  )}
+        if (item != null){
+            // Update the dataset with the result from the dictionary service.
+            Log.d(TAG, "got dictionary result for ${item.dictForm}. Reading is ${dictResult.reading}")
+            item.dictForm = dictResult.dictForm
+            item.reading = dictResult.reading
+            item.meanings = dictResult.meanings
+            item.jlptLvl = dictResult.jlptLvl
+            item.tags = dictResult.tags
+            item.pos = dictResult.pos
+            this.notifyDataSetChanged()
+        }
     }
 }

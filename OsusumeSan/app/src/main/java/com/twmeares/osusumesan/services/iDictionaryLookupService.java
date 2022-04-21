@@ -10,6 +10,7 @@ public interface iDictionaryLookupService {
 
     public void Search(String word, String reading, Boolean isFuriganaEnabled, Callback callback);
     public void SearchMultiResult(String word, MultiResultCallback callback);
+    public boolean IsInQueue(String word);
 
     public interface Callback {
         void DisplayDictResult(DictionaryResult result);

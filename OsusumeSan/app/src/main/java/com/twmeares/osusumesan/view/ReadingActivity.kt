@@ -1,5 +1,6 @@
 package com.twmeares.osusumesan.view
 
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -25,6 +26,7 @@ import com.twmeares.osusumesan.services.*
 import android.text.StaticLayout
 import androidx.startup.AppInitializer
 import com.twmeares.osusumesan.models.*
+import org.json.JSONObject
 
 
 class ReadingActivity : AppCompatActivity() {
@@ -33,7 +35,7 @@ class ReadingActivity : AppCompatActivity() {
     private lateinit var tokenizer: OsusumeSanTokenizer
     private lateinit var mainTextView: CustomTextView
     private lateinit var jmDictFuriHelper: JMDictFuriHelper
-    private lateinit var dictService: DictionaryLookupService
+    private lateinit var dictService: iDictionaryLookupService
     private lateinit var aozoraService: AozoraService
     private lateinit var knowledgeService: KnowledgeService
     private lateinit var tokens: List<OsusumeSanToken>
@@ -102,8 +104,73 @@ class ReadingActivity : AppCompatActivity() {
         }
 
         setupClickListeners()
+    }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.vocab_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.title.equals(getString(R.string.vocab_title))) {
+            // Start the search activity with the unique words supplied as an input.
+            Log.d(TAG, "Opening vocab list")
+
+            var inputSearchList = arrayListOf<DictionaryResult>()
+            var wordList = arrayListOf<String>()
+            if (this::article.isInitialized){
+                // get the list of unique words for this article.
+                var articleWordList = JSONObject(article.wordList)
+                var kangoWords = articleWordList.getJSONArray("kango")
+                var wagoWords = articleWordList.getJSONArray("wago")
+                var verbWords = articleWordList.getJSONArray("verb")
+
+                for (idx in 0 until kangoWords.length()) {
+                    val word = kangoWords.getString(idx)
+                    //inputSearchList.add(DictionaryResult(word, "", null, null, null, null, false))
+                    wordList.add(word)
+                }
+                for (idx in 0 until wagoWords.length()) {
+                    val word = wagoWords.getString(idx)
+                    //inputSearchList.add(DictionaryResult(word, "", null, null, null, null, false))
+                    wordList.add(word)
+                }
+                for (idx in 0 until verbWords.length()) {
+                    val word = verbWords.getString(idx)
+                    //inputSearchList.add(DictionaryResult(word, "", null, null, null, null, false))
+                    wordList.add(word)
+                }
+
+            } else {
+                // user input text. Create a word list based on tokens that are
+                // not known aka have furigana enabled.
+                val tokenMap: MutableMap<String, Int> = mutableMapOf<String, Int>()
+                var allTokens = tokenizer.Tokenize(fullText)
+                allTokens.forEach{ token ->
+                    if ((token.isKanaWord || token.isKanjiWord) && !tokenMap.containsKey(token.dictForm)) {
+                        tokenMap.put(token.dictForm, 1)
+                        //inputSearchList.add(DictionaryResult(token.dictForm, token.reading, null, null, null, null, false))
+                        wordList.add(token.dictForm)
+                    }
+                }
+            }
+
+            // Keep only the words that are unknown.
+            var wordIsKnownMap = knowledgeService.GetIsKnownForWordsList(wordList)
+            wordList.forEach { word ->
+                val isKnown = wordIsKnownMap[word]
+                if (isKnown == null){
+                    inputSearchList.add(DictionaryResult(word, "", null, null, null, null, false))
+                } else if (isKnown == false){
+                    inputSearchList.add(DictionaryResult(word, "", null, null, null, null, false))
+                }
+            }
+            val intent = Intent(this, SearchActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            intent.putExtra("inputSearchList", inputSearchList)
+            this.startActivity(intent)
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onResume() {
@@ -145,7 +212,9 @@ class ReadingActivity : AppCompatActivity() {
                     mode.finish()
                     // TODO search with the word = exact selection, and maybe reading as the combined readings of the selection if it spans multiple tokens?
                     // Probably need to make sure that this doesn't show the enable/disable furi btn since that code wont work properly for this word.
-                    //dictService.Search(word, reading, isFuriganaEnabled, displayDictCallback)
+
+                    val reading = "" // There is no way to reliably determine the reading in this situation.
+                    dictService.Search(searchSelection, reading, false, displayDictCallback)
                     return true
                 }
                 return false

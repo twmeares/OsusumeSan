@@ -77,7 +77,9 @@ class ArticleItemAdapter : RecyclerView.Adapter<ArticleItemAdapter.ItemViewHolde
         val percentKnown = knowledgeService.GetPercentKnown(wordList)
         holder.percentKnownTextView.setTextColor(ContextCompat.getColor(context, R.color.purple_700))
         holder.percentKnownTextView.text = "%.0f".format(percentKnown) + "%"
-
+        // store the wordlist with the article item itself.
+        // Store as string b/c java fails to serialize json lol.
+        item.wordList = wordList.toString()
     }
 
     /**

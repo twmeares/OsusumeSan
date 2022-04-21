@@ -22,11 +22,12 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var searchItemAdapter: SearchItemAdapter
     private lateinit var binding: ActivitySearchBinding
     private val TAG = "SearchActivity"
-    private lateinit var dictService: DictionaryLookupService
+    private lateinit var dictService: iDictionaryLookupService
     private val displayDictCallback = iDictionaryLookupService.MultiResultCallback(::DisplayDictResults)
     private lateinit var searchList: MutableList<DictionaryResult>
     private lateinit var knowledgeService: KnowledgeService
     private val context: Context = this
+    private var inputSearchList: MutableList<DictionaryResult>? = null
     
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,8 +40,12 @@ class SearchActivity : AppCompatActivity() {
         dictService = DictionaryLookupService(this)
         searchList = mutableListOf<DictionaryResult>()
 
+        // If the searchActivity was opened from the readingActivity an inputSearchList will be passed.
+        inputSearchList = intent.getSerializableExtra("inputSearchList") as? MutableList<DictionaryResult>
+
+
         val recyclerView = findViewById<RecyclerView>(R.id.search_recycler_view)
-        searchItemAdapter = SearchItemAdapter(this, searchList)
+        searchItemAdapter = SearchItemAdapter(this, searchList, dictService)
         recyclerView.adapter = searchItemAdapter
         searchItemAdapter.setOnItemClickListener(object: SearchItemAdapter.OnItemClickListener{
             override fun onItemClick(position: Int) {
@@ -48,20 +53,29 @@ class SearchActivity : AppCompatActivity() {
             }
         })
 
-        // Use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
-        recyclerView.setHasFixedSize(true)
+        recyclerView.setHasFixedSize(false)
+
+        if (inputSearchList != null && inputSearchList!!.size > 0){
+            DisplayDictResults(inputSearchList!!)
+            binding.searchHeader.visibility = View.VISIBLE
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.search_menu, menu)
         val search: MenuItem? = menu?.findItem(R.id.search)
         val searchView: SearchView = search?.actionView as SearchView
-        searchView.isIconifiedByDefault = false
         searchView.maxWidth = binding.root.measuredWidth
         searchView.queryHint = "Search Dictionary"
-        // Request focus to automatically bring up the keyboard when the activity loads.
-        searchView.requestFocus()
+
+        // Request focus to automatically bring up the keyboard when the activity loads,
+        // but only when no input list was supplied in the intent.
+        if (inputSearchList != null){
+            searchView.isIconifiedByDefault = true
+        } else {
+            searchView.isIconifiedByDefault = false
+            searchView.requestFocus()
+        }
 
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -90,6 +104,7 @@ class SearchActivity : AppCompatActivity() {
             binding.emptyView.visibility = View.VISIBLE
         } else {
             binding.emptyView.visibility = View.GONE
+            binding.searchHeader.visibility = View.GONE
             binding.searchRecyclerView.visibility = View.VISIBLE
             searchList.clear()
             searchList.addAll(dictResultList)
@@ -130,6 +145,8 @@ class SearchActivity : AppCompatActivity() {
     fun hideSoftKeyboard() {
         val inputMethodManager: InputMethodManager =
             this.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.hideSoftInputFromWindow(this.currentFocus!!.windowToken, 0)
+        if (this.currentFocus != null){
+            inputMethodManager.hideSoftInputFromWindow(this.currentFocus!!.windowToken, 0)
+        }
     }
 }

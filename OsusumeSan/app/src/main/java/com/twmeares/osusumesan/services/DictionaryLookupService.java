@@ -18,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,17 +28,22 @@ public class DictionaryLookupService implements iDictionaryLookupService{
     private static final String TAG = "DictionaryLookupService";
     private RequestQueue queue;
     private Context context;
+    private HashMap<String, Integer> inQueueMap;
 
     public DictionaryLookupService(Context context){
         this.context = context;
         queue = Volley.newRequestQueue(this.context);
+        inQueueMap = new HashMap<>();
+    }
+
+    public boolean IsInQueue(String word){
+        return inQueueMap.containsKey(word);
     }
 
     // Searches dictionary and returns a single exact match only.
     @Override
     public void Search(String word, String reading, Boolean isFuriganaEnabled, Callback callback) {
-        queue.cancelAll(this);
-
+        inQueueMap.put(word, 1);
         StringRequest stringRequest = SearchRequest(word, reading, isFuriganaEnabled, callback);
         stringRequest.setTag(this);
 
@@ -81,9 +87,20 @@ public class DictionaryLookupService implements iDictionaryLookupService{
 
                                 int conversion_flags = KanaConverter.OP_ZEN_KATA_TO_ZEN_HIRA;
                                 if (m.find()
+                                        &&  reading.equals(""))
+                                {
+                                    // Special case for searching a user highlighted word which means
+                                    // the reading is unknown and all we have is the surface form.
+                                    matchFound = true;
+                                    DictionaryResult dictResult = ExtractDictionaryResult(entryReading, isFuriganaEnabled, entry);
+                                    callback.DisplayDictResult(dictResult);
+                                    break;
+                                }
+                                else if (m.find()
                                     && ( reading.equals(entryReading)
                                     || reading.equals( KanaConverter.convertKana(entryReading, conversion_flags)) ))
                                 {
+                                    // Normal case when the word matches and so does its reading.
                                     matchFound = true;
                                     DictionaryResult dictResult = ExtractDictionaryResult(reading, isFuriganaEnabled, entry);
                                     callback.DisplayDictResult(dictResult);
@@ -112,8 +129,6 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                         // words that usually have kanji but the kanji wasn't used in the
                                         // input text.
 
-                                        // throwing out the reading here and passing the word twice since the reading is likely too
-                                        // specific to the current usage and that's why this case matched for word isntead of reading
                                         DictionaryResult dictResult = ExtractDictionaryResult(word, isFuriganaEnabled, entry);
                                         callback.DisplayDictResult(dictResult);
                                         break;
@@ -121,8 +136,8 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                 }
                             }
                             if (matchFound == false && readingOnlyMatch == false){
-                                //Likely the case for proper names.
-                                Log.d(TAG, "No exact dictionary match found");
+                                // Show a message for any words that fail for lookup.
+                                Log.d(TAG, "No exact dictionary match found for " + word);
                                 String msg = "No exact match found for " + word;
                                 List<String> meanings = new ArrayList<>();
                                 List<String> pos = new ArrayList<>();
@@ -135,6 +150,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                             Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
                             Log.e(TAG, "problem with parsing json. EX:" + e.getMessage());
                         }
+                        inQueueMap.remove(word);
                     }
                 },
                 new Response.ErrorListener() {
@@ -187,7 +203,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
 
     private DictionaryResult ExtractDictionaryResult(String reading, Boolean isFuriganaEnabled, JSONObject entry) throws JSONException {
         String dictForm = entry.getJSONArray("japanese").getJSONObject(0).optString("word", "");
-        // Is there really a need to supply the reading isntead of getting it from the entry???
+        // Is there really a need to supply the reading instead of getting it from the entry???
         String reading2 = entry.getJSONArray("japanese").getJSONObject(0).getString("reading");
         if (!reading.equals(reading2)){
             Log.d(TAG, "found a diff");

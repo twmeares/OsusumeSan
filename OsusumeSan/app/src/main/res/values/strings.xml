@@ -62,5 +62,7 @@
 
     <string name="search_title">Search Dictionary</string>
     <string name="no_result_text">Search Jisho for words.\nSearch allows English, Japense, or Romaji.</string>
+    <string name="vocab_title">vocab menu</string>
+    <string name="search_header">Current Reading\'s Vocab List</string>
 
 </resources>

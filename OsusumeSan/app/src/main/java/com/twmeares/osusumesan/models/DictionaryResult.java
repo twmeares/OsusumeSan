@@ -14,7 +14,7 @@ public class DictionaryResult implements Serializable {
     private Boolean isFuriganaEnabled;
 
     public DictionaryResult(String dictForm, String reading, List<String> meanings, String jlptLvl,
-                            List<String> pos, List<String> tags, Boolean isFuriganaEnabled){
+                            List<String> pos, List<String> tags, Boolean isFuriganaEnabled) {
         this.reading = reading;
         this.dictForm = dictForm;
         this.meanings = meanings;
@@ -51,4 +51,33 @@ public class DictionaryResult implements Serializable {
     public Boolean getIsFuriganaEnabled() {
         return isFuriganaEnabled;
     }
+
+    public void setReading(String reading) {
+        this.reading = reading;
+    }
+
+    public void setDictForm(String dictForm) {
+        this.dictForm = dictForm;
+    }
+
+    public void setMeanings(List<String> meanings) {
+        this.meanings = meanings;
+    }
+
+    public void setPos(List<String> pos) {
+        this.pos = pos;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
+    public void setJlptLvl(String jlptLvl) {
+        this.jlptLvl = jlptLvl;
+    }
+
+    public void setFuriganaEnabled(Boolean furiganaEnabled) {
+        isFuriganaEnabled = furiganaEnabled;
+    }
+
 }

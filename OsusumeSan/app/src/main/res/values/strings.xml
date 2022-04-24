@@ -17,7 +17,7 @@
     <string name="btnInputText_MenuPage">Input Text</string>
     <string name="btnSettings">Settings</string>
     <string name="btnSearch">Search Dictionary</string>
-    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_settings">Settings</string>
 
 
     <!-- Knowledge Model Preferences -->
@@ -53,6 +53,7 @@
     <string name="reading_list_level">Difficulty</string>
     <string name="reading_list_known_words">% Known Words</string>
     <string name="reading_list_article_summary">Loading details</string>
+    <string name="title_activity_reading_list">Reading List</string>
 
     <!-- Knowledge list -->
     <string name="knowledge_list_isknown">Is Known</string>

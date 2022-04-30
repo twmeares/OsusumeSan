@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 
 public class AozoraService {
     private final String URL_PREFIX = "https://pubserver2.herokuapp.com/api/v0.1/";
+    // In case the above url ever stops working it seems there is another version at
+    // http://www.aozorahack.net/api/v0.1, but it's an older version of the same thing essentially.
     private static final String TAG = "AozoraService";
     private RequestQueue queue;
     private Context context;

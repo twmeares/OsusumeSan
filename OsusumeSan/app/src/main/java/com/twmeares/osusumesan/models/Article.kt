@@ -5,7 +5,17 @@ import java.util.regex.Pattern
 import java.util.regex.Pattern.DOTALL
 
 
-class Article(val title: String, val level: Double, val summary: String, val bookId: String) : Serializable {
+class Article(val bookId: String) : Serializable {
+    constructor(title: String, level: Double, summary: String, bookId: String) : this(bookId){
+        this.title = title
+        this.level = level
+        this.summary = summary
+    }
+
+    lateinit var title: String
+    var level: Double = 0.0
+    lateinit var summary: String
+
     var text: String = ""
     var wordList: String = "" //String form of jsonObject to get around java serialization problem
     fun ProcessText(){

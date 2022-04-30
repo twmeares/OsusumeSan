@@ -45,7 +45,7 @@ class ReadingActivity : AppCompatActivity() {
     private val TAG: String = "ReadingActivity"
     private val displayDictCallback = iDictionaryLookupService.Callback(::DisplayDictResult)
     private val aozoraArticleCallback = AozoraService.Callback(::LoadAozoraResult)
-    private var currentPageNum: Int = 0
+    private var currentPageNum: Int = 1
     private var isTextMultiPage: Boolean = false
     private var lastLineCutCharNum: Int = 0
     private var furiTrackerMap: MutableMap<String, FuriTracker> = mutableMapOf<String, FuriTracker>()
@@ -70,40 +70,59 @@ class ReadingActivity : AppCompatActivity() {
             Log.i(TAG, "Received input text of length " + fullText.length)
             //getOnePageOfText(1)
             GlobalScope.launch(Dispatchers.IO){
-                startReading(1)
+                startReading(currentPageNum)
             }
         } else if (inputArticle != null){
             // fetch the book data
             article = inputArticle
-            curPageText = "Fetching text from Aozora Bunko."
-            aozoraService = AozoraService(this)
-            aozoraService.FetchArticle(article, aozoraArticleCallback)
-            GlobalScope.launch(Dispatchers.IO){
-                initialize()
-            }
+            fetchArticleFromAozora()
         }
         else {
-            // TODO eventually remove this section or put some other default.
-            //test strings for now
-            //var text = "頑張り屋"
-            //var text = "大人買い" //doesn't work properly due to being tokenized as two words instead of one
-            fullText = "村岡桃佳選手は、スキーで2つ目の金メダルに挑戦します。"
-            //fullText = "たくさん"
-            //fullText = "べんきょう"
-            //fullText = "花見"
-            //fullText = "花粉"
-            //var text = "食べてる"
-            //var text = "にほんごをべんきょうする"
-            //text = "憚る" //"憚かる" // this word isn't recognized in kuromoji but is in sudachi
-            //fullText = "花花花花花花花花"
+            // Resume Last Reading
+            val savedBookID = sharedPref.getString("bookId", null)
+            if (savedBookID != null){
+                // Resume reading the article based on bookId
+                currentPageNum = sharedPref.getInt("currentPageNum", 1)
+                article = Article(savedBookID)
+                fetchArticleFromAozora()
+            } else {
+                // Check for fullText (AKA resume saved user input)
+                val savedFullText = sharedPref.getString("fullText", null)
+                if (savedFullText != null){
+                    fullText = savedFullText
+                    currentPageNum = sharedPref.getInt("currentPageNum", 1)
+                } else {
+                    // Neither found so display a default.
+                    fullText = "Welcome to OsusumeSan. Please select an article from the reading " +
+                            "list or use the input text feature."
+                }
 
-            //getOnePageOfText(1)
-            GlobalScope.launch(Dispatchers.IO){
-                startReading(1)
+                GlobalScope.launch(Dispatchers.IO){
+                    startReading(currentPageNum)
+                }
             }
         }
 
         setupClickListeners()
+    }
+
+
+    override fun onPause() {
+        super.onPause()
+        val preference = PreferenceManager.getDefaultSharedPreferences(this)
+        val editor = preference.edit()
+        editor.putInt("currentPageNum", currentPageNum)
+        if (this::article.isInitialized){
+            // Store current page and bookID
+            editor.putString("bookId", article.bookId)
+            editor.remove("fullText")
+        } else {
+            // Opened with user input, so save the whole input.
+            // TODO is this gonna be too big?
+            editor.putString("fullText", fullText)
+            editor.remove("bookId")
+        }
+        editor.commit()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -519,13 +538,9 @@ class ReadingActivity : AppCompatActivity() {
 
     fun LoadAozoraResult(result: Article){
         article = result
-
-        // Limit the amount to show for now.
         GlobalScope.launch(Dispatchers.IO){
-            //displayText(result.text.substring(0, 200))
             fullText = result.text
-            //getOnePageOfText(1)
-            startReading(1)
+            startReading(currentPageNum)
         }
     }
 
@@ -600,6 +615,15 @@ class ReadingActivity : AppCompatActivity() {
                     displayText(curPageText)
                 }
             }
+        }
+    }
+
+    private fun fetchArticleFromAozora(){
+        curPageText = "Fetching text from Aozora Bunko."
+        aozoraService = AozoraService(this)
+        aozoraService.FetchArticle(article, aozoraArticleCallback)
+        GlobalScope.launch(Dispatchers.IO){
+            initialize()
         }
     }
 

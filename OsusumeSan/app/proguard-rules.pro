@@ -19,3 +19,17 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+#-optimizationpasses 5
+#-keep class * extends android.app.Activity
+#-keep class * extends android.database.sqlite.SQLiteOpenHelper
+-keep class com.atilika.kuromoji.ipadic.*
+-keep class com.mariten.kanatools.*
+-keep class com.worksap.nlp.sudachi.*
+#-keep class android.widget.SearchView { *; }
+
+# remove logging
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+}

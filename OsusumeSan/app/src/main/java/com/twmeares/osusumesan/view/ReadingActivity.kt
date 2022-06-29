@@ -56,6 +56,7 @@ class ReadingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityReadingBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         initMainTextView()
         val sharedPref: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)

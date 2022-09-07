@@ -13,6 +13,7 @@ import com.twmeares.osusumesan.ui.MovementMethod
 import com.twmeares.osusumesan.ui.RubySpan
 import java.lang.Integer.min
 import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
 import android.view.*
 import androidx.preference.PreferenceManager
 import com.twmeares.osusumesan.ui.CustomTextView
@@ -97,6 +98,9 @@ class ReadingActivity : AppCompatActivity() {
                     fullText = "Welcome to OsusumeSan. Please select an article from the reading " +
                             "list or use the input text feature."
                 }
+                //if (0 != applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE){
+                //    fullText = "微笑んだ。"
+                //}
 
                 GlobalScope.launch(Dispatchers.IO){
                     startReading(currentPageNum)

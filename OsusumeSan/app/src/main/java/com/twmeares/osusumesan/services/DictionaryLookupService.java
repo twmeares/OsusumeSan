@@ -75,6 +75,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                             JSONArray result = new JSONObject(response).getJSONArray("data");
                             Boolean matchFound = false;
                             Boolean readingOnlyMatch = false;
+                            Boolean wordOnlyMatch = false;
                             for (int i = 0 ; i < result.length(); i++) {
                                 JSONObject entry = result.getJSONObject(i);
                                 String pattern = word + "-{0,1}[0-9]{0,9}";
@@ -86,7 +87,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                 String entryReading = entry.getJSONArray("japanese").getJSONObject(0).getString("reading");
 
                                 int conversion_flags = KanaConverter.OP_ZEN_KATA_TO_ZEN_HIRA;
-                                if (m.find()
+                                if (m.matches()
                                         &&  reading.equals(""))
                                 {
                                     // Special case for searching a user highlighted word which means
@@ -96,7 +97,7 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                     callback.DisplayDictResult(dictResult);
                                     break;
                                 }
-                                else if (m.find()
+                                else if (m.matches()
                                     && ( reading.equals(entryReading)
                                     || reading.equals( KanaConverter.convertKana(entryReading, conversion_flags)) ))
                                 {
@@ -134,8 +135,18 @@ public class DictionaryLookupService implements iDictionaryLookupService{
                                         break;
                                     }
                                 }
+                                else if (m.matches()){
+                                    // This is a match without reading. Often verbs reading don't match the 'word' because
+                                    // the reading is usually from the conjugated version.
+                                    if (wordOnlyMatch == false) {
+                                        wordOnlyMatch = true;
+                                        DictionaryResult dictResult = ExtractDictionaryResult(entryReading, isFuriganaEnabled, entry);
+                                        callback.DisplayDictResult(dictResult);
+                                        break;
+                                    }
+                                }
                             }
-                            if (matchFound == false && readingOnlyMatch == false){
+                            if (matchFound == false && readingOnlyMatch == false && wordOnlyMatch == false){
                                 // Show a message for any words that fail for lookup.
                                 Log.d(TAG, "No exact dictionary match found for " + word);
                                 String msg = "No exact match found for " + word;
